@@ -176,6 +176,14 @@ public class XNADropDown : XNAControl
     private int hoveredIndex = 0;
     private bool clickedAfterOpen = false;
     private int numFittingItems = 0;
+    private int openWidth = 0;
+
+    // In order to not measure text every draw call, we'll cache things
+    private string cachedDisplayText = null;
+    private int cachedSelectedIndex = -1;
+    private int cachedWidth = 0;
+    private int cachedFontIndex = 0;
+    private string cachedItemText = null;
 
     #region AddItem methods
 
@@ -240,6 +248,8 @@ public class XNADropDown : XNAControl
         DropDownOpenTexture = AssetLoader.LoadTexture("openedComboBoxArrow.png");
 
         Height = DropDownTexture.Height;
+
+        ClientRectangleUpdated += (s, e) => InvalidateDisplayTextCache();
     }
 
     protected override void ParseControlINIAttribute(IniFile iniFile, string key, string value)
@@ -343,6 +353,20 @@ public class XNADropDown : XNAControl
     public void OpenDropDown()
     {
         TopIndex = 0;
+
+        // What's the max width that fits all items
+        openWidth = Width;
+        foreach (var item in Items)
+        {
+            int itemWidth = 4; //padding
+            if (item.Texture != null)
+                itemWidth += item.Texture.Width + 1;
+            if (item.Text != null)
+                itemWidth += (int)Renderer.MeasureString(item.Text, FontIndex).X;
+
+            if (itemWidth > openWidth)
+                openWidth = itemWidth;
+        }
 
         if (!OpenUp)
         {
@@ -472,7 +496,9 @@ public class XNADropDown : XNAControl
     {
         Point p = GetCursorPoint();
 
-        if (p.X < 0 || p.X > Width ||
+        int hitTestWidth = DropDownState != DropDownState.CLOSED ? openWidth : Width;
+
+        if (p.X < 0 || p.X > hitTestWidth ||
             p.Y > Height ||
             p.Y < 0)
         {
@@ -503,6 +529,70 @@ public class XNADropDown : XNAControl
         }
 
         return -1;
+    }
+
+    /// <summary>
+    /// Invalidates the cached display text.
+    /// </summary>
+    private void InvalidateDisplayTextCache()
+    {
+        cachedDisplayText = null;
+    }
+
+    /// <summary>
+    /// Gets the display text for the selected item.
+    /// Truncates with ellipsis if required.
+    /// </summary>
+    private string GetDisplayTextForSelectedItem(XNADropDownItem item, int textX)
+    {
+        if (cachedDisplayText != null &&
+            cachedSelectedIndex == SelectedIndex &&
+            cachedWidth == Width &&
+            cachedFontIndex == FontIndex &&
+            cachedItemText == item.Text)
+        {
+            return cachedDisplayText;
+        }
+
+        string displayText = item.Text;
+
+        if (item.Text != null)
+        {
+            int availableWidth = Width - textX - DropDownTexture.Width - 2;
+
+            Vector2 textSize = Renderer.MeasureString(item.Text, FontIndex);
+
+            if (textSize.X > availableWidth)
+            {
+                const string ellipsis = "...";
+                float ellipsisWidth = Renderer.MeasureString(ellipsis, FontIndex).X;
+                float maxWidth = availableWidth - ellipsisWidth;
+
+                int bestFit = 0;
+                float currentWidth = 0f;
+
+                for (int i = 0; i < item.Text.Length; i++)
+                {
+                    string test = item.Text.Substring(0, i + 1);
+                    currentWidth = Renderer.MeasureString(test, FontIndex).X;
+
+                    if (currentWidth > maxWidth)
+                        break;
+
+                    bestFit = i + 1;
+                }
+
+                displayText = item.Text.Substring(0, bestFit) + ellipsis;
+            }
+        }
+
+        cachedDisplayText = displayText;
+        cachedSelectedIndex = SelectedIndex;
+        cachedWidth = Width;
+        cachedFontIndex = FontIndex;
+        cachedItemText = item.Text;
+
+        return displayText;
     }
 
     /// <summary>
@@ -537,7 +627,8 @@ public class XNADropDown : XNAControl
 
             if (item.Text != null)
             {
-                DrawStringWithShadow(item.Text, FontIndex,
+                string displayText = GetDisplayTextForSelectedItem(item, textX);
+                DrawStringWithShadow(displayText, FontIndex,
                     new Vector2(textX, dropDownRect.Y + 2), GetItemTextColor(item));
             }
         }
@@ -555,9 +646,9 @@ public class XNADropDown : XNAControl
                 Rectangle listRectangle;
 
                 if (DropDownState == DropDownState.OPENED_DOWN)
-                    listRectangle = new Rectangle(0, DropDownTexture.Height, Width, Height - DropDownTexture.Height);
+                    listRectangle = new Rectangle(0, DropDownTexture.Height, openWidth, Height - DropDownTexture.Height);
                 else
-                    listRectangle = new Rectangle(0, 0, Width, Height - DropDownTexture.Height);
+                    listRectangle = new Rectangle(0, 0, openWidth, Height - DropDownTexture.Height);
 
                 DrawRectangle(listRectangle, BorderColor);
 
@@ -586,13 +677,15 @@ public class XNADropDown : XNAControl
     {
         XNADropDownItem item = Items[index];
 
+        int itemWidth = DropDownState != DropDownState.CLOSED ? openWidth : Width;
+
         if (hoveredIndex == index)
         {
-            FillRectangle(new Rectangle(1, y, Width - 2, ItemHeight), FocusColor);
+            FillRectangle(new Rectangle(1, y, itemWidth - 2, ItemHeight), FocusColor);
         }
         else
         {
-            FillRectangle(new Rectangle(1, y, Width - 2, ItemHeight), BackColor);
+            FillRectangle(new Rectangle(1, y, itemWidth - 2, ItemHeight), BackColor);
         }
 
         int textX = 2;

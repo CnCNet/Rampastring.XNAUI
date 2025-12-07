@@ -146,14 +146,6 @@
   <ItemGroup Condition="$(DefineConstants.Contains('GL'))">
     <PackageReference Include="MonoGame.Framework.DesktopGL" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" Version="3.8.0.1641" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Condition="'$(TargetFrameworkIdentifier)' != '.NETFramework'" Version="3.8.1.303" />
-    
-    <!-- TfmSpecificPackageFile is an MSBuild item group used during the **NuGet** packing process to specify target framework moniker-specific files for inclusion in the package. -->
-    <!-- MSBuild's ProjectReference does not automatically copy native DLLs transitively like NuGet does. -->
-    <!-- ProjectReference only copies managed assemblies (.dll, .exe) and explicitly marked content. -->
-    <!-- This workaround marks the native DLLs in x64/ and x86/ as "content" in the build output. -->
-    <!-- MSBuild then copies them to the output of any project that references Rampastring.XNAUI via ProjectReference (e.g., ClientGUI → DXMainClient). -->
-    <Content Include="$(OutputPath)x64\**" Link="x64\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(OutputPath)x86\**" Link="x86\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup Condition="$(DefineConstants.Contains('XNA'))">
     <Reference Include="Microsoft.Xna.Framework">

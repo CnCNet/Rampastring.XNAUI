@@ -186,4 +186,16 @@
     <None Include="$(PkgMonoGame_Framework_DesktopGL)\runtimes\win-x86\native\*.dll" Link="x86\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="FontStashSharp.TextShapers.HarfBuzz" Version="1.2.2" />
+  </ItemGroup>
+
+  <ItemGroup Condition="!$(DefineConstants.Contains('XNA'))">
+    <PackageReference Include="FontStashSharp.MonoGame" Version="1.5.1" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(DefineConstants.Contains('XNA'))">
+    <PackageReference Include="FontStashSharp.XNA" Version="1.5.1" />
+  </ItemGroup>
+
 </Project>

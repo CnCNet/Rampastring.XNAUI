@@ -87,11 +87,25 @@ public class XNAControl : DrawableGameComponent
     public event EventHandler MouseOnControl;
 
     /// <summary>
+    /// Raised during the tunneling phase when the scroll wheel is used to scroll vertically.
+    /// Fires on ancestors from outermost to innermost before <see cref="MouseScrolled"/> bubbles.
+    /// If handled, the bubbling phase is suppressed.
+    /// </summary>
+    public event EventHandler<InputEventArgs> PreviewMouseScrolled;
+
+    /// <summary>
+    /// Raised during the tunneling phase when the scroll wheel is used to scroll horizontally.
+    /// Fires on ancestors from outermost to innermost before <see cref="MouseScrolledHorizontally"/> bubbles.
+    /// If handled, the bubbling phase is suppressed.
+    /// </summary>
+    public event EventHandler<InputEventArgs> PreviewMouseScrolledHorizontally;
+
+    /// <summary>
     /// Raised when the scroll wheel is used to scroll vertically
     /// while the cursor is inside the control.
     /// </summary>
     public event EventHandler<InputEventArgs> MouseScrolled;
-        
+
     /// <summary>
     /// Raised when the scroll wheel is used to scroll horizontally
     /// while the cursor is inside the control.
@@ -1729,14 +1743,34 @@ public class XNAControl : DrawableGameComponent
     }
 
     /// <summary>
-    /// Called when the scroll wheel has been scrolled on the 
+    /// Called during the tunneling phase when the scroll wheel has been scrolled vertically.
+    /// Fires on ancestors from outermost to innermost before <see cref="OnMouseScrolled"/>.
+    /// Set <see cref="InputEventArgs.Handled"/> to true to suppress the bubbling phase.
+    /// </summary>
+    public virtual void OnPreviewMouseScrolled(InputEventArgs inputEventArgs)
+    {
+        PreviewMouseScrolled?.Invoke(this, inputEventArgs);
+    }
+
+    /// <summary>
+    /// Called during the tunneling phase when the scroll wheel has been scrolled horizontally.
+    /// Fires on ancestors from outermost to innermost before <see cref="OnMouseScrolledHorizontally"/>.
+    /// Set <see cref="InputEventArgs.Handled"/> to true to suppress the bubbling phase.
+    /// </summary>
+    public virtual void OnPreviewMouseScrolledHorizontally(InputEventArgs inputEventArgs)
+    {
+        PreviewMouseScrolledHorizontally?.Invoke(this, inputEventArgs);
+    }
+
+    /// <summary>
+    /// Called when the scroll wheel has been scrolled on the
     /// control's client rectangle.
     /// </summary>
     public virtual void OnMouseScrolled(InputEventArgs inputEventArgs)
     {
         MouseScrolled?.Invoke(this, inputEventArgs);
     }
-    
+
     /// <summary>
     /// Called when the scroll wheel has been scrolled horizontally
     /// on the control's client rectangle.

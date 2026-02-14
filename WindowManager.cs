@@ -794,12 +794,18 @@ public class WindowManager : DrawableGameComponent
 
                     if (Cursor.ScrollWheelValue != 0 && !isInputCaptured)
                     {
-                        PropagateInputEvent(static (c, ie) => c.OnMouseScrolled(ie), MouseInputFlags.ScrollWheel);
+                        var scrollArgs = new InputEventArgs();
+                        PropagateInputEventTunneling(static (c, ie) => c.OnPreviewMouseScrolled(ie), scrollArgs);
+                        if (!scrollArgs.Handled)
+                            PropagateInputEvent(static (c, ie) => c.OnMouseScrolled(ie), MouseInputFlags.ScrollWheel, scrollArgs);
                     }
-                    
+
                     if (Cursor.HorizontalScrollWheelValue != 0 && !isInputCaptured)
                     {
-                        PropagateInputEvent(static (c, ie) => c.OnMouseScrolledHorizontally(ie), MouseInputFlags.ScrollWheelHorizontal);
+                        var scrollArgs = new InputEventArgs();
+                        PropagateInputEventTunneling(static (c, ie) => c.OnPreviewMouseScrolledHorizontally(ie), scrollArgs);
+                        if (!scrollArgs.Handled)
+                            PropagateInputEvent(static (c, ie) => c.OnMouseScrolledHorizontally(ie), MouseInputFlags.ScrollWheelHorizontal, scrollArgs);
                     }
                 }
             }
@@ -820,8 +826,10 @@ public class WindowManager : DrawableGameComponent
     }
 
     private void PropagateInputEvent(Action<XNAControl, InputEventArgs> action, MouseInputFlags mouseInputFlags)
+        => PropagateInputEvent(action, mouseInputFlags, new InputEventArgs());
+
+    private void PropagateInputEvent(Action<XNAControl, InputEventArgs> action, MouseInputFlags mouseInputFlags, InputEventArgs inputEventArgs)
     {
-        var inputEventArgs = new InputEventArgs();
         XNAControl control = ActiveControl;
 
         while (control != null)
@@ -837,6 +845,30 @@ public class WindowManager : DrawableGameComponent
             }
 
             control = control.Parent;
+        }
+    }
+
+    private void PropagateInputEventTunneling(Action<XNAControl, InputEventArgs> action, InputEventArgs inputEventArgs)
+    {
+        // Fire events top-down
+        // Build the path from ActiveControl up to the root
+        var path = new List<XNAControl>();
+        var control = ActiveControl;
+        while (control != null)
+        {
+            path.Add(control);
+            control = control.Parent;
+        }
+
+        for (int i = path.Count - 1; i >= 0; i--)
+        {
+            var c = path[i];
+            if (!c.InputPassthrough)
+            {
+                action(c, inputEventArgs);
+                if (inputEventArgs.Handled)
+                    break;
+            }
         }
     }
 

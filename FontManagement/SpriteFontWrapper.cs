@@ -32,9 +32,10 @@ public class SpriteFontWrapper : IFont
             char c = str[i];
             if (c != '\r' && c != '\n' && !HasCharacter(c))
             {
-                sb.Replace(c, '?');
+                sb[i] = '?';
             }
         }
+
         return sb.ToString();
     }
 }

@@ -32,6 +32,8 @@ namespace Rampastring.XNAUI.FontManagement;
 /// </remarks>
 public static class FontManager
 {
+    private const int DefaultShapedTextCacheSize = 100;
+
     private static List<IFont> fonts;
     private static List<FontSystem> fontSystems = new();
     private static TextShapingSettings textShapingSettings = new();
@@ -114,7 +116,8 @@ public static class FontManager
                 Logger.Log($"FontManager: Loading fonts from {iniPath}");
                 LoadFontsFromIni(iniPath, contentManager, searchPath, baseDir);
                 fontsIniFound = true;
-                break; // Stop after first Fonts.ini found
+                // Stop after first Fonts.ini found
+                break;
             }
         }
 
@@ -129,7 +132,10 @@ public static class FontManager
                 LoadLegacySpriteFonts(contentManager, searchPath, baseDir);
 
                 if (fonts.Count > fontsBeforeLoad)
-                    break; // Stop after first path with legacy fonts
+                {
+                    // Stop after first path with legacy fonts
+                    break;
+                }
             }
         }
 
@@ -194,10 +200,10 @@ public static class FontManager
     {
         textShapingSettings.Enabled = iniFile.GetBooleanValue("TextShaping", "Enabled", false);
         textShapingSettings.EnableBiDi = iniFile.GetBooleanValue("TextShaping", "EnableBiDi", true);
-        textShapingSettings.CacheSize = iniFile.GetIntValue("TextShaping", "CacheSize", 100);
+        textShapingSettings.CacheSize = iniFile.GetIntValue("TextShaping", "CacheSize", DefaultShapedTextCacheSize);
 
         if (textShapingSettings.CacheSize < 1)
-            textShapingSettings.CacheSize = 100;
+            textShapingSettings.CacheSize = DefaultShapedTextCacheSize;
 
         Logger.Log($"FontManager: Text shaping settings: Enabled={textShapingSettings.Enabled}, BiDi={textShapingSettings.EnableBiDi}, CacheSize={textShapingSettings.CacheSize}");
     }
@@ -324,6 +330,7 @@ public static class FontManager
 
     /// <summary>
     /// Loads legacy SpriteFonts (SpriteFont0, SpriteFont1, etc.) from a search path.
+    /// This method appends new fonts to the existing font list instead of replacing it.
     /// </summary>
     private static void LoadLegacySpriteFonts(ContentManager contentManager, string searchPath, string baseDir)
     {
@@ -361,6 +368,8 @@ public static class FontManager
         var font = fonts[fontIndex];
         var sb = new StringBuilder(str);
 
+        // TODO: Consider using a binary search for better performance with very long messages,
+        // MeasureString is relatively expensive and this has O(n) complexity
         while (font.MeasureString(sb.ToString()).X > maxWidth && sb.Length > 0)
         {
             sb.Remove(sb.Length - 1, 1);

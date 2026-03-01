@@ -398,34 +398,120 @@ public class XNATextBox : XNAControl
     }
 #endif
 
+    // Advance past exactly one Unicode code point (handles surrogate pairs).
+    private int AdvanceCodePoint(int pos)
+    {
+        if (char.IsHighSurrogate(text[pos]) && pos + 1 < text.Length && char.IsLowSurrogate(text[pos + 1]))
+            return pos + 2;
+        return pos + 1;
+    }
+
+    // Returns true if the character(s) at pos are Unicode "extend" characters that can appear
+    // inside a grapheme cluster: variation selectors, combining marks, or emoji modifiers.
+    private bool IsExtendCharacter(int pos)
+    {
+        char c = text[pos];
+
+        // Variation selectors U+FE00-U+FE0F
+        if (c >= '\uFE00' && c <= '\uFE0F')
+            return true;
+
+        // Combining marks for symbols U+20D0-U+20FF
+        if (c >= '\u20D0' && c <= '\u20FF')
+            return true;
+
+        // Emoji modifiers (skin tones) U+1F3FB-U+1F3FF — encoded as surrogate pairs
+        if (char.IsHighSurrogate(c) && pos + 1 < text.Length && char.IsLowSurrogate(text[pos + 1]))
+        {
+            int codePoint = char.ConvertToUtf32(c, text[pos + 1]);
+            return codePoint >= 0x1F3FB && codePoint <= 0x1F3FF;
+        }
+
+        return false;
+    }
+
+    // Returns the end of the grapheme cluster starting at position.
+    // Handles surrogate pairs, ZWJ emoji sequences, variation selectors, and emoji modifiers.
     private int GetNextCharacterBoundary(int position)
     {
         if (position >= text.Length)
             return text.Length;
         if (position < 0)
             return 0;
-        if (position < text.Length - 1 && char.IsHighSurrogate(text[position]) && char.IsLowSurrogate(text[position + 1]))
-            return position + 2;
-        return position + 1;
+
+        // Step past the first code point of this cluster.
+        int next = AdvanceCodePoint(position);
+
+        // This joins ZWJ emoji sequences into one cluster.
+        bool advanced = true;
+        while (advanced && next < text.Length)
+        {
+            advanced = false;
+
+            // Consume any trailing extend characters.
+            while (next < text.Length && IsExtendCharacter(next))
+                next = AdvanceCodePoint(next);
+
+            // If a ZWJ follows, join it with the next code point as part of this cluster.
+            if (next < text.Length && text[next] == '\u200D')
+            {
+                int afterZwj = next + 1;
+                if (afterZwj < text.Length)
+                {
+                    next = AdvanceCodePoint(afterZwj);
+                    advanced = true;
+                }
+                else
+                {
+                    // Trailing ZWJ with nothing after — include it in this cluster.
+                    next = afterZwj;
+                }
+            }
+        }
+
+        return next;
     }
 
+    // Returns the start of the grapheme cluster immediately before position.
+    // Enumerates clusters from the start of the string using GetNextCharacterBoundary.
     private int GetPreviousCharacterBoundary(int position)
     {
         if (position <= 0)
             return 0;
         if (position > text.Length)
             position = text.Length;
-        if (position > 1 && char.IsLowSurrogate(text[position - 1]) && char.IsHighSurrogate(text[position - 2]))
-            return position - 2;
-        return position - 1;
+
+        int clusterStart = 0;
+        int clusterEnd = GetNextCharacterBoundary(0);
+
+        while (clusterEnd < position)
+        {
+            clusterStart = clusterEnd;
+            clusterEnd = GetNextCharacterBoundary(clusterEnd);
+            if (clusterEnd <= clusterStart)
+                break;
+        }
+
+        return clusterStart;
     }
 
+    // If position falls inside a grapheme cluster, snaps it to the cluster's start boundary.
     private int EnsureCharacterBoundary(int position)
     {
         if (position <= 0 || position >= text.Length)
             return position;
-        if (char.IsLowSurrogate(text[position]) && position > 0 && char.IsHighSurrogate(text[position - 1]))
-            return position - 1;
+
+        int current = 0;
+        while (current < position)
+        {
+            int next = GetNextCharacterBoundary(current);
+            if (next > position)
+                return current; // position is inside [current, next) — snap to cluster start
+            if (next == position || next <= current)
+                break;
+            current = next;
+        }
+
         return position;
     }
 
@@ -976,7 +1062,7 @@ public class XNATextBox : XNAControl
     private int HowManyCharactersToScrollLeft()
     {
         if (!Keyboard.IsCtrlHeldDown())
-            return GetPreviousCharacterBoundary(InputPosition) - InputPosition;
+            return InputPosition - GetPreviousCharacterBoundary(InputPosition);
 
         if (InputPosition < 2)
             return InputPosition;

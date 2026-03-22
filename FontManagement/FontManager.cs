@@ -71,7 +71,8 @@ public static class FontManager
             TextureWidth = fontRenderingSettings.TextureWidth,
             TextureHeight = fontRenderingSettings.TextureHeight,
             GlyphRenderResult = fontRenderingSettings.GlyphRenderResult,
-            UseEmToPixelsScale = true
+            UseEmToPixelsScale = true,
+            FontLoader = new FreeTypeFontLoader(),
         };
 
         if (textShapingSettings.Enabled)

@@ -366,6 +366,9 @@ public static class FontManager
 
         var font = fonts[fontIndex];
 
+        if (str == null)
+            throw new ArgumentNullException(nameof(str));
+
         if (string.IsNullOrEmpty(str) || font.MeasureString(str).X <= maxWidth)
             return str;
 

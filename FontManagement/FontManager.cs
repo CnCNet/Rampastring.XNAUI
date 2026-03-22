@@ -250,6 +250,7 @@ public static class FontManager
     private static void CreateTrueTypeFontIndex(int fontIndex, string primaryFontPath, int size, string searchPath)
     {
         FontSystem fontSystem = CreateFontSystem();
+        fontSystem.DefaultCharacter = '?';
         fontSystems.Add(fontSystem);
 
         bool hasPrimaryFont = false;

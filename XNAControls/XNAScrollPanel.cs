@@ -389,7 +389,7 @@ public class XNAScrollPanel : XNAPanel
 
         CurrentViewPosition = CurrentViewPosition with { X = CurrentViewPosition.X - Cursor.HorizontalScrollWheelValue * ScrollStep };
 
-        base.OnMouseScrolled(inputEventArgs);
+        base.OnMouseScrolledHorizontally(inputEventArgs);
     }
 
     #endregion

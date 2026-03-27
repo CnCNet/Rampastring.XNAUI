@@ -363,26 +363,32 @@ public class XNAScrollPanel : XNAPanel
         CurrentViewPosition = CurrentViewPosition with { Y = CurrentViewPosition.Y - Cursor.ScrollWheelValue * ScrollStep };
     }
 
+    public override void OnPreviewMouseScrolled(InputEventArgs inputEventArgs)
+        => OnMouseScrolled(inputEventArgs);
+
+    public override void OnPreviewMouseScrolledHorizontally(InputEventArgs inputEventArgs)
+        => OnMouseScrolledHorizontally(inputEventArgs);
+
     public override void OnMouseScrolled(InputEventArgs inputEventArgs)
     {
         inputEventArgs.Handled = true;
-        
+
         // scroll horizontally if no vertical scroll needed to ease the life of users without horizontal scroll
         // or if shift is held
         if (!CanScroll.Y || Keyboard.IsShiftHeldDown())
             CurrentViewPosition = CurrentViewPosition with { X = CurrentViewPosition.X - Cursor.ScrollWheelValue * ScrollStep };
         else
             CurrentViewPosition = CurrentViewPosition with { Y = CurrentViewPosition.Y - Cursor.ScrollWheelValue * ScrollStep };
-        
+
         base.OnMouseScrolled(inputEventArgs);
     }
-    
+
     public override void OnMouseScrolledHorizontally(InputEventArgs inputEventArgs)
     {
         inputEventArgs.Handled = true;
-        
+
         CurrentViewPosition = CurrentViewPosition with { X = CurrentViewPosition.X - Cursor.HorizontalScrollWheelValue * ScrollStep };
-        
+
         base.OnMouseScrolled(inputEventArgs);
     }
 

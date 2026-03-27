@@ -755,13 +755,19 @@ public class WindowManager : DrawableGameComponent
                         if (!isInputCaptured)
                         {
                             ActiveControl.IsLeftPressedOn = true;
-                            PropagateInputEvent(static (c, ie) => c.OnMouseLeftDown(ie), MouseInputFlags.LeftMouseButton);
+                            var args = new InputEventArgs();
+                            PropagateInputEventTunneling(static (c, ie) => c.OnPreviewMouseLeftDown(ie), args);
+                            if (!args.Handled)
+                                PropagateInputEvent(static (c, ie) => c.OnMouseLeftDown(ie), MouseInputFlags.LeftMouseButton, args);
                         }
                     }
                     else if (!Cursor.LeftDown && ActiveControl.IsLeftPressedOn)
                     {
                         ActiveControl.IsLeftPressedOn = false;
-                        PropagateInputEvent(static (c, ie) => c.OnLeftClick(ie), MouseInputFlags.LeftMouseButton);
+                        var args = new InputEventArgs();
+                        PropagateInputEventTunneling(static (c, ie) => c.OnPreviewLeftClick(ie), args);
+                        if (!args.Handled)
+                            PropagateInputEvent(static (c, ie) => c.OnLeftClick(ie), MouseInputFlags.LeftMouseButton, args);
                     }
 
                     if (Cursor.RightPressedDown)
@@ -769,13 +775,19 @@ public class WindowManager : DrawableGameComponent
                         if (!isInputCaptured)
                         {
                             ActiveControl.IsRightPressedOn = true;
-                            PropagateInputEvent(static (c, ie) => c.OnMouseRightDown(ie), MouseInputFlags.RightMouseButton);
+                            var args = new InputEventArgs();
+                            PropagateInputEventTunneling(static (c, ie) => c.OnPreviewMouseRightDown(ie), args);
+                            if (!args.Handled)
+                                PropagateInputEvent(static (c, ie) => c.OnMouseRightDown(ie), MouseInputFlags.RightMouseButton, args);
                         }
                     }
                     else if (!Cursor.RightDown && ActiveControl.IsRightPressedOn)
                     {
                         ActiveControl.IsRightPressedOn = false;
-                        PropagateInputEvent(static (c, ie) => c.OnRightClick(ie), MouseInputFlags.RightMouseButton);
+                        var args = new InputEventArgs();
+                        PropagateInputEventTunneling(static (c, ie) => c.OnPreviewRightClick(ie), args);
+                        if (!args.Handled)
+                            PropagateInputEvent(static (c, ie) => c.OnRightClick(ie), MouseInputFlags.RightMouseButton, args);
                     }
 
                     if (Cursor.MiddlePressedDown)
@@ -783,23 +795,35 @@ public class WindowManager : DrawableGameComponent
                         if (!isInputCaptured)
                         {
                             ActiveControl.IsMiddlePressedOn = true;
-                            PropagateInputEvent(static (c, ie) => c.OnMouseMiddleDown(ie), MouseInputFlags.MiddleMouseButton);
+                            var args = new InputEventArgs();
+                            PropagateInputEventTunneling(static (c, ie) => c.OnPreviewMouseMiddleDown(ie), args);
+                            if (!args.Handled)
+                                PropagateInputEvent(static (c, ie) => c.OnMouseMiddleDown(ie), MouseInputFlags.MiddleMouseButton, args);
                         }
                     }
                     else if (!Cursor.MiddleDown && ActiveControl.IsMiddlePressedOn)
                     {
                         ActiveControl.IsMiddlePressedOn = false;
-                        PropagateInputEvent(static (c, ie) => c.OnMiddleClick(ie), MouseInputFlags.MiddleMouseButton);
+                        var args = new InputEventArgs();
+                        PropagateInputEventTunneling(static (c, ie) => c.OnPreviewMiddleClick(ie), args);
+                        if (!args.Handled)
+                            PropagateInputEvent(static (c, ie) => c.OnMiddleClick(ie), MouseInputFlags.MiddleMouseButton, args);
                     }
 
                     if (Cursor.ScrollWheelValue != 0 && !isInputCaptured)
                     {
-                        PropagateInputEvent(static (c, ie) => c.OnMouseScrolled(ie), MouseInputFlags.ScrollWheel);
+                        var scrollArgs = new InputEventArgs();
+                        PropagateInputEventTunneling(static (c, ie) => c.OnPreviewMouseScrolled(ie), scrollArgs);
+                        if (!scrollArgs.Handled)
+                            PropagateInputEvent(static (c, ie) => c.OnMouseScrolled(ie), MouseInputFlags.ScrollWheel, scrollArgs);
                     }
-                    
+
                     if (Cursor.HorizontalScrollWheelValue != 0 && !isInputCaptured)
                     {
-                        PropagateInputEvent(static (c, ie) => c.OnMouseScrolledHorizontally(ie), MouseInputFlags.ScrollWheelHorizontal);
+                        var scrollArgs = new InputEventArgs();
+                        PropagateInputEventTunneling(static (c, ie) => c.OnPreviewMouseScrolledHorizontally(ie), scrollArgs);
+                        if (!scrollArgs.Handled)
+                            PropagateInputEvent(static (c, ie) => c.OnMouseScrolledHorizontally(ie), MouseInputFlags.ScrollWheelHorizontal, scrollArgs);
                     }
                 }
             }
@@ -820,8 +844,10 @@ public class WindowManager : DrawableGameComponent
     }
 
     private void PropagateInputEvent(Action<XNAControl, InputEventArgs> action, MouseInputFlags mouseInputFlags)
+        => PropagateInputEvent(action, mouseInputFlags, new InputEventArgs());
+
+    private void PropagateInputEvent(Action<XNAControl, InputEventArgs> action, MouseInputFlags mouseInputFlags, InputEventArgs inputEventArgs)
     {
-        var inputEventArgs = new InputEventArgs();
         XNAControl control = ActiveControl;
 
         while (control != null)
@@ -837,6 +863,30 @@ public class WindowManager : DrawableGameComponent
             }
 
             control = control.Parent;
+        }
+    }
+
+    private void PropagateInputEventTunneling(Action<XNAControl, InputEventArgs> action, InputEventArgs inputEventArgs)
+    {
+        // Fire events top-down
+        // Build the path from ActiveControl up to the root
+        var path = new List<XNAControl>();
+        var control = ActiveControl;
+        while (control != null)
+        {
+            path.Add(control);
+            control = control.Parent;
+        }
+
+        for (int i = path.Count - 1; i >= 0; i--)
+        {
+            var c = path[i];
+            if (!c.InputPassthrough)
+            {
+                action(c, inputEventArgs);
+                if (inputEventArgs.Handled)
+                    break;
+            }
         }
     }
 

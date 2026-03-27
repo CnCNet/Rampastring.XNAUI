@@ -54,16 +54,37 @@ public class XNAControl : DrawableGameComponent
     public event EventHandler MouseEnter;
 
     /// <summary>
+    /// Raised during the tunneling phase when the left mouse button is pressed down.
+    /// Fires on ancestors from outermost to innermost before <see cref="MouseLeftDown"/> bubbles.
+    /// If handled, the bubbling phase is suppressed.
+    /// </summary>
+    public event EventHandler<InputEventArgs> PreviewMouseLeftDown;
+
+    /// <summary>
     /// Raised once when the left mouse button is pressed down while the
     /// cursor is inside the control's area.
     /// </summary>
     public event EventHandler<InputEventArgs> MouseLeftDown;
 
     /// <summary>
+    /// Raised during the tunneling phase when the right mouse button is pressed down.
+    /// Fires on ancestors from outermost to innermost before <see cref="MouseRightDown"/> bubbles.
+    /// If handled, the bubbling phase is suppressed.
+    /// </summary>
+    public event EventHandler<InputEventArgs> PreviewMouseRightDown;
+
+    /// <summary>
     /// Raised once when the right mouse button is pressed down while the
     /// cursor is inside the control's area.
     /// </summary>
     public event EventHandler<InputEventArgs> MouseRightDown;
+
+    /// <summary>
+    /// Raised during the tunneling phase when the middle mouse button is pressed down.
+    /// Fires on ancestors from outermost to innermost before <see cref="MouseMiddleDown"/> bubbles.
+    /// If handled, the bubbling phase is suppressed.
+    /// </summary>
+    public event EventHandler<InputEventArgs> PreviewMouseMiddleDown;
 
     /// <summary>
     /// Raised once when the middle mouse button is pressed down while the
@@ -87,16 +108,37 @@ public class XNAControl : DrawableGameComponent
     public event EventHandler MouseOnControl;
 
     /// <summary>
+    /// Raised during the tunneling phase when the scroll wheel is used to scroll vertically.
+    /// Fires on ancestors from outermost to innermost before <see cref="MouseScrolled"/> bubbles.
+    /// If handled, the bubbling phase is suppressed.
+    /// </summary>
+    public event EventHandler<InputEventArgs> PreviewMouseScrolled;
+
+    /// <summary>
+    /// Raised during the tunneling phase when the scroll wheel is used to scroll horizontally.
+    /// Fires on ancestors from outermost to innermost before <see cref="MouseScrolledHorizontally"/> bubbles.
+    /// If handled, the bubbling phase is suppressed.
+    /// </summary>
+    public event EventHandler<InputEventArgs> PreviewMouseScrolledHorizontally;
+
+    /// <summary>
     /// Raised when the scroll wheel is used to scroll vertically
     /// while the cursor is inside the control.
     /// </summary>
     public event EventHandler<InputEventArgs> MouseScrolled;
-        
+
     /// <summary>
     /// Raised when the scroll wheel is used to scroll horizontally
     /// while the cursor is inside the control.
     /// </summary>
     public event EventHandler<InputEventArgs> MouseScrolledHorizontally;
+
+    /// <summary>
+    /// Raised during the tunneling phase when the left mouse button is clicked.
+    /// Fires on ancestors from outermost to innermost before <see cref="LeftClick"/> bubbles.
+    /// If handled, the bubbling phase is suppressed.
+    /// </summary>
+    public event EventHandler<InputEventArgs> PreviewLeftClick;
 
     /// <summary>
     /// Raised when the left mouse button is clicked (pressed and released)
@@ -111,10 +153,24 @@ public class XNAControl : DrawableGameComponent
     public event EventHandler<InputEventArgs> DoubleLeftClick;
 
     /// <summary>
+    /// Raised during the tunneling phase when the right mouse button is clicked.
+    /// Fires on ancestors from outermost to innermost before <see cref="RightClick"/> bubbles.
+    /// If handled, the bubbling phase is suppressed.
+    /// </summary>
+    public event EventHandler<InputEventArgs> PreviewRightClick;
+
+    /// <summary>
     /// Raised when the right mouse button is clicked (pressed and released)
     /// while the cursor is inside the control's area.
     /// </summary>
     public event EventHandler<InputEventArgs> RightClick;
+
+    /// <summary>
+    /// Raised during the tunneling phase when the middle mouse button is clicked.
+    /// Fires on ancestors from outermost to innermost before <see cref="MiddleClick"/> bubbles.
+    /// If handled, the bubbling phase is suppressed.
+    /// </summary>
+    public event EventHandler<InputEventArgs> PreviewMiddleClick;
 
     /// <summary>
     /// Raised when the middle mouse button is clicked (pressed and released)
@@ -1640,6 +1696,16 @@ public class XNAControl : DrawableGameComponent
     }
 
     /// <summary>
+    /// Called during the tunneling phase when the left mouse button is pressed down.
+    /// Fires on ancestors from outermost to innermost before <see cref="OnMouseLeftDown"/>.
+    /// Set <see cref="InputEventArgs.Handled"/> to true to suppress the bubbling phase.
+    /// </summary>
+    public virtual void OnPreviewMouseLeftDown(InputEventArgs inputEventArgs)
+    {
+        PreviewMouseLeftDown?.Invoke(this, inputEventArgs);
+    }
+
+    /// <summary>
     /// Called once when the left mouse button is pressed down while the cursor
     /// is on the control.
     /// </summary>
@@ -1647,6 +1713,16 @@ public class XNAControl : DrawableGameComponent
     {
         WindowManager.SelectedControl = this;
         MouseLeftDown?.Invoke(this, e);
+    }
+
+    /// <summary>
+    /// Called during the tunneling phase when the right mouse button is pressed down.
+    /// Fires on ancestors from outermost to innermost before <see cref="OnMouseRightDown"/>.
+    /// Set <see cref="InputEventArgs.Handled"/> to true to suppress the bubbling phase.
+    /// </summary>
+    public virtual void OnPreviewMouseRightDown(InputEventArgs inputEventArgs)
+    {
+        PreviewMouseRightDown?.Invoke(this, inputEventArgs);
     }
 
     /// <summary>
@@ -1659,6 +1735,16 @@ public class XNAControl : DrawableGameComponent
     }
 
     /// <summary>
+    /// Called during the tunneling phase when the middle mouse button is pressed down.
+    /// Fires on ancestors from outermost to innermost before <see cref="OnMouseMiddleDown"/>.
+    /// Set <see cref="InputEventArgs.Handled"/> to true to suppress the bubbling phase.
+    /// </summary>
+    public virtual void OnPreviewMouseMiddleDown(InputEventArgs inputEventArgs)
+    {
+        PreviewMouseMiddleDown?.Invoke(this, inputEventArgs);
+    }
+
+    /// <summary>
     /// Called once when the middle mouse button is pressed down while the cursor
     /// is on the control.
     /// </summary>
@@ -1668,7 +1754,17 @@ public class XNAControl : DrawableGameComponent
     }
 
     /// <summary>
-    /// Called when the left mouse button has been 
+    /// Called during the tunneling phase when the left mouse button is clicked.
+    /// Fires on ancestors from outermost to innermost before <see cref="OnLeftClick"/>.
+    /// Set <see cref="InputEventArgs.Handled"/> to true to suppress the bubbling phase.
+    /// </summary>
+    public virtual void OnPreviewLeftClick(InputEventArgs inputEventArgs)
+    {
+        PreviewLeftClick?.Invoke(this, inputEventArgs);
+    }
+
+    /// <summary>
+    /// Called when the left mouse button has been
     /// clicked on the control's client rectangle.
     /// </summary>
     public virtual void OnLeftClick(InputEventArgs inputEventArgs)
@@ -1685,7 +1781,7 @@ public class XNAControl : DrawableGameComponent
     }
 
     /// <summary>
-    /// Called when the left mouse button has been 
+    /// Called when the left mouse button has been
     /// clicked twice on the control's client rectangle.
     /// </summary>
     public virtual void OnDoubleLeftClick(InputEventArgs inputEventArgs)
@@ -1694,7 +1790,17 @@ public class XNAControl : DrawableGameComponent
     }
 
     /// <summary>
-    /// Called when the right mouse button has been 
+    /// Called during the tunneling phase when the right mouse button is clicked.
+    /// Fires on ancestors from outermost to innermost before <see cref="OnRightClick"/>.
+    /// Set <see cref="InputEventArgs.Handled"/> to true to suppress the bubbling phase.
+    /// </summary>
+    public virtual void OnPreviewRightClick(InputEventArgs inputEventArgs)
+    {
+        PreviewRightClick?.Invoke(this, inputEventArgs);
+    }
+
+    /// <summary>
+    /// Called when the right mouse button has been
     /// clicked on the control's client rectangle.
     /// </summary>
     public virtual void OnRightClick(InputEventArgs inputEventArgs)
@@ -1703,7 +1809,17 @@ public class XNAControl : DrawableGameComponent
     }
 
     /// <summary>
-    /// Called when the middle mouse button has been 
+    /// Called during the tunneling phase when the middle mouse button is clicked.
+    /// Fires on ancestors from outermost to innermost before <see cref="OnMiddleClick"/>.
+    /// Set <see cref="InputEventArgs.Handled"/> to true to suppress the bubbling phase.
+    /// </summary>
+    public virtual void OnPreviewMiddleClick(InputEventArgs inputEventArgs)
+    {
+        PreviewMiddleClick?.Invoke(this, inputEventArgs);
+    }
+
+    /// <summary>
+    /// Called when the middle mouse button has been
     /// clicked on the control's client rectangle.
     /// </summary>
     public virtual void OnMiddleClick(InputEventArgs inputEventArgs)
@@ -1729,14 +1845,34 @@ public class XNAControl : DrawableGameComponent
     }
 
     /// <summary>
-    /// Called when the scroll wheel has been scrolled on the 
+    /// Called during the tunneling phase when the scroll wheel has been scrolled vertically.
+    /// Fires on ancestors from outermost to innermost before <see cref="OnMouseScrolled"/>.
+    /// Set <see cref="InputEventArgs.Handled"/> to true to suppress the bubbling phase.
+    /// </summary>
+    public virtual void OnPreviewMouseScrolled(InputEventArgs inputEventArgs)
+    {
+        PreviewMouseScrolled?.Invoke(this, inputEventArgs);
+    }
+
+    /// <summary>
+    /// Called during the tunneling phase when the scroll wheel has been scrolled horizontally.
+    /// Fires on ancestors from outermost to innermost before <see cref="OnMouseScrolledHorizontally"/>.
+    /// Set <see cref="InputEventArgs.Handled"/> to true to suppress the bubbling phase.
+    /// </summary>
+    public virtual void OnPreviewMouseScrolledHorizontally(InputEventArgs inputEventArgs)
+    {
+        PreviewMouseScrolledHorizontally?.Invoke(this, inputEventArgs);
+    }
+
+    /// <summary>
+    /// Called when the scroll wheel has been scrolled on the
     /// control's client rectangle.
     /// </summary>
     public virtual void OnMouseScrolled(InputEventArgs inputEventArgs)
     {
         MouseScrolled?.Invoke(this, inputEventArgs);
     }
-    
+
     /// <summary>
     /// Called when the scroll wheel has been scrolled horizontally
     /// on the control's client rectangle.

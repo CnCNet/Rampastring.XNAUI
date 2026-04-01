@@ -382,7 +382,7 @@ public class XNAScrollPanel : XNAPanel
         
         base.OnMouseScrolled(inputEventArgs);
     }
-        
+    
     public override void OnMouseScrolledHorizontally(InputEventArgs inputEventArgs)
     {
         inputEventArgs.Handled = true;

@@ -53,6 +53,14 @@ public static class Renderer
     }
 
     /// <summary>
+    /// Notifies the font system that the display scale ratio has changed.
+    /// TTF fonts are reloaded at <c>size × scaleRatio</c> resolution so they remain
+    /// sharp after the render target is upscaled to fill the window.
+    /// </summary>
+    public static void ApplyScaleRatio(float scaleRatio) =>
+        FontManager.ApplyScaleRatio(scaleRatio);
+
+    /// <summary>
     /// Allows direct access to the list of loaded fonts.
     /// </summary>
     public static List<IFont> GetFontList() => FontManager.GetFontList();

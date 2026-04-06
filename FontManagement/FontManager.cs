@@ -36,6 +36,8 @@ public static class FontManager
     private static List<IFont> fonts;
     private static List<FontSystem> fontSystems = new();
     private static TextShapingSettings textShapingSettings = new();
+    private static ContentManager _contentManager;
+    private static float _currentFontResolutionFactor = 1f;
 
     public static void Initialize()
     {
@@ -57,7 +59,12 @@ public static class FontManager
     /// </summary>
     private static FontSystem CreateFontSystem()
     {
-        var settings = new FontSystemSettings();
+        var settings = new FontSystemSettings
+        {
+            // Rasterize glyphs at (fontSize × factor) pixels so they stay sharp
+            // when the render target is upscaled to fill the window at ScaleRatio.
+            FontResolutionFactor = _currentFontResolutionFactor
+        };
 
         if (textShapingSettings.Enabled)
         {
@@ -70,6 +77,21 @@ public static class FontManager
         }
 
         return new FontSystem(settings);
+    }
+
+    /// <summary>
+    /// Reloads all TTF fonts with a new font resolution factor matching the given scale ratio.
+    /// This makes TTF glyphs rasterize at <c>size × scaleRatio</c> pixels so they remain
+    /// sharp after the render target is upscaled to fill the window.
+    /// No-op if the factor has not changed or fonts have not been loaded yet.
+    /// </summary>
+    public static void ApplyScaleRatio(float scaleRatio)
+    {
+        if (_contentManager == null) return;
+        if (Math.Abs(scaleRatio - _currentFontResolutionFactor) < 0.001f) return;
+
+        Logger.Log($"FontManager: Scale ratio changed to {scaleRatio}, reloading fonts");
+        LoadFonts(_contentManager, scaleRatio);
     }
 
     /// <summary>
@@ -90,9 +112,17 @@ public static class FontManager
     /// - For SpriteFonts: Load the .xnb file
     /// </para>
     /// </remarks>
-    public static void LoadFonts(ContentManager contentManager)
+    public static void LoadFonts(ContentManager contentManager, float fontResolutionFactor = 1f)
     {
+        _contentManager = contentManager;
+        _currentFontResolutionFactor = fontResolutionFactor;
+
         fonts ??= [];
+
+        // Dispose old FontSystem instances to release GPU texture atlases
+        foreach (var fs in fontSystems)
+            fs.Dispose();
+
         fonts.Clear();
         fontSystems.Clear();
 
@@ -397,7 +427,7 @@ public static class FontManager
         // which holds for all standard fonts.
         // This reduces complexity from O(n) to O(log n) compared to removing one character at a time.
 
-        // Warning: Copilot said: The binary search relies on prefix width being monotonic with length, but that’s not guaranteed with kerning and/or HarfBuzz text shaping (both are used in this codebase). In such cases it’s possible for a longer prefix to measure narrower than a shorter one, making the <= maxWidth predicate non-monotonic and causing the search to return a prefix that is not the longest-fitting (or potentially not fitting at all, depending on the path).
+        // Warning: Copilot said: The binary search relies on prefix width being monotonic with length, but that's not guaranteed with kerning and/or HarfBuzz text shaping (both are used in this codebase). In such cases it's possible for a longer prefix to measure narrower than a shorter one, making the <= maxWidth predicate non-monotonic and causing the search to return a prefix that is not the longest-fitting (or potentially not fitting at all, depending on the path).
         // We accept this risk for now.
         int low = 0;
         int high = str.Length - 1;

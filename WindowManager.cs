@@ -235,6 +235,8 @@ public class WindowManager : DrawableGameComponent
         SceneXPosition = texturePositionX;
         SceneYPosition = texturePositionY;
 
+        Renderer.ApplyScaleRatio((float)ScaleRatio);
+
         if (renderTarget != null && !renderTarget.IsDisposed)
             renderTarget.Dispose();
 

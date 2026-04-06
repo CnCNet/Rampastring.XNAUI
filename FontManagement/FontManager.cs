@@ -374,7 +374,7 @@ public static class FontManager
     public static string GetSafeString(string str, int fontIndex)
     {
         if (fontIndex < 0 || fontIndex >= fonts.Count)
-            throw new IndexOutOfRangeException("Invalid font index.");
+            throw new IndexOutOfRangeException($"Invalid font index. {fonts.Count} fonts loaded, requested index: {fontIndex}");
 
         return fonts[fontIndex].GetSafeString(str);
     }
@@ -382,7 +382,7 @@ public static class FontManager
     public static string GetStringWithLimitedWidth(string str, int fontIndex, int maxWidth)
     {
         if (fontIndex < 0 || fontIndex >= fonts.Count)
-            throw new IndexOutOfRangeException("Invalid font index.");
+            throw new IndexOutOfRangeException($"Invalid font index. {fonts.Count} fonts loaded, requested index: {fontIndex}");
 
         var font = fonts[fontIndex];
 
@@ -417,7 +417,7 @@ public static class FontManager
     public static TextParseReturnValue FixText(string text, int fontIndex, int width)
     {
         if (fontIndex < 0 || fontIndex >= fonts.Count)
-            throw new IndexOutOfRangeException("Invalid font index.");
+            throw new IndexOutOfRangeException($"Invalid font index. {fonts.Count} fonts loaded, requested index: {fontIndex}");
 
         IFont font = fonts[fontIndex];
         return TextParseReturnValue.FixText(font, width, text);
@@ -426,7 +426,7 @@ public static class FontManager
     public static List<string> GetFixedTextLines(string text, int fontIndex, int width, bool splitWords = true, bool keepBlankLines = false)
     {
         if (fontIndex < 0 || fontIndex >= fonts.Count)
-            throw new IndexOutOfRangeException("Invalid font index.");
+            throw new IndexOutOfRangeException($"Invalid font index. {fonts.Count} fonts loaded, requested index: {fontIndex}");
 
         IFont font = fonts[fontIndex];
         return TextParseReturnValue.GetFixedTextLines(font, width, text, splitWords, keepBlankLines);
@@ -435,7 +435,7 @@ public static class FontManager
     public static Vector2 GetTextDimensions(string text, int fontIndex)
     {
         if (fontIndex < 0 || fontIndex >= fonts.Count)
-            throw new IndexOutOfRangeException("Invalid font index: " + fontIndex);
+            throw new IndexOutOfRangeException($"Invalid font index. {fonts.Count} fonts loaded, requested index: {fontIndex}");
 
         return fonts[fontIndex].MeasureString(text);
     }
@@ -443,7 +443,7 @@ public static class FontManager
     public static void DrawString(SpriteBatch spriteBatch, string text, int fontIndex, Vector2 location, Color color, float scale = 1.0f, float depth = 0f)
     {
         if (fontIndex < 0 || fontIndex >= fonts.Count)
-            throw new IndexOutOfRangeException("Invalid font index: " + fontIndex);
+            throw new IndexOutOfRangeException($"Invalid font index. {fonts.Count} fonts loaded, requested index: {fontIndex}");
 
         fonts[fontIndex].DrawString(spriteBatch, text, location, color, scale, depth);
     }
@@ -451,7 +451,7 @@ public static class FontManager
     public static void DrawStringWithShadow(SpriteBatch spriteBatch, string text, int fontIndex, Vector2 location, Color color, float scale = 1.0f, float shadowDistance = 1.0f, float depth = 0f)
     {
         if (fontIndex < 0 || fontIndex >= fonts.Count)
-            throw new IndexOutOfRangeException("Invalid font index: " + fontIndex);
+            throw new IndexOutOfRangeException($"Invalid font index. {fonts.Count} fonts loaded, requested index: {fontIndex}");
 
         Color shadowColor;
 #if XNA

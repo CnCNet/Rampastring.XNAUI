@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using FontStashSharp;
 using Rampastring.XNAUI.FontManagement;
-#if !XNA
+#if !XNA && !NETFRAMEWORK
 using Forme.MonoGame;
 #endif
 #if XNA
@@ -43,7 +43,7 @@ public static class Renderer
 
     internal static SpriteBatchSettings CurrentSettings;
 
-#if !XNA
+#if !XNA && !NETFRAMEWORK
     /// <summary>
     /// Gets the <see cref="Microsoft.Xna.Framework.Graphics.GraphicsDevice"/> used for rendering.
     /// Available after <see cref="Initialize"/> has been called.
@@ -63,7 +63,7 @@ public static class Renderer
     {
         spriteBatch = new SpriteBatch(gd);
 
-#if !XNA
+#if !XNA && !NETFRAMEWORK
         GraphicsDevice = gd;
         FormeRenderer = new FormeRenderer(gd);
 #endif

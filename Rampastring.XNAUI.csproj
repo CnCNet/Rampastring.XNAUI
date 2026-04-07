@@ -196,7 +196,7 @@
     <PackageReference Include="FontStashSharp.XNA" Version="1.5.2" />
   </ItemGroup>
 
-  <ItemGroup Condition="!$(DefineConstants.Contains('XNA'))">
+  <ItemGroup Condition="!$(DefineConstants.Contains('XNA')) And '$(TargetFrameworkIdentifier)' != '.NETFramework'">
     <PackageReference Include="AristurtleDev.Forme" Version="0.0.3" />
     <PackageReference Include="AristurtleDev.Forme.MonoGame" Version="0.0.3" />
   </ItemGroup>

@@ -1,4 +1,4 @@
-#if !XNA
+#if !XNA && !NETFRAMEWORK
 using System;
 using Forme.MonoGame;
 using FontStashSharp;

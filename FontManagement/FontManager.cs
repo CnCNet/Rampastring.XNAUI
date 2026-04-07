@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Rampastring.Tools;
-#if !XNA
+#if !XNA && !NETFRAMEWORK
 using Forme;
 using Forme.MonoGame;
 #endif
@@ -215,7 +215,7 @@ public static class FontManager
                     LoadSpriteFont(contentManager, searchPath, sfName);
                     break;
 
-#if !XNA
+#if !XNA && !NETFRAMEWORK
                 case FontType.Forme:
                     CreateFormeFontIndex(i, config, searchPath);
                     break;
@@ -339,7 +339,7 @@ public static class FontManager
         }
     }
 
-#if !XNA
+#if !XNA && !NETFRAMEWORK
     /// <summary>
     /// Creates a Forme GPU font index from a TTF or <c>.forme</c> file.
     /// </summary>

@@ -105,12 +105,12 @@
   <!--Switching between Configurations within VS IDE requires reloading the project file-->
   <ItemGroup Condition="$(DefineConstants.Contains('DX'))">
     <PackageReference Include="MonoGame.Framework.WindowsDX" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" Version="3.8.0.1641" />
-    <PackageReference Include="MonoGame.Framework.WindowsDX" Condition="'$(TargetFrameworkIdentifier)' != '.NETFramework'" Version="3.8.4.1" />
+    <PackageReference Include="MonoGame.Framework.WindowsDX" Condition="'$(TargetFrameworkIdentifier)' != '.NETFramework'" Version="3.8.0.1641" />
   </ItemGroup>
   
   <ItemGroup Condition="$(DefineConstants.Contains('GL'))">
     <PackageReference Include="MonoGame.Framework.DesktopGL" GeneratePathProperty="true" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" Version="3.8.0.1641" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL" GeneratePathProperty="true" Condition="'$(TargetFrameworkIdentifier)' != '.NETFramework'" Version="3.8.4.1" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" GeneratePathProperty="true" Condition="'$(TargetFrameworkIdentifier)' != '.NETFramework'" Version="3.8.0.1641" />
   </ItemGroup>
   
   <ItemGroup Condition="$(DefineConstants.Contains('XNA'))">
@@ -197,8 +197,8 @@
   </ItemGroup>
 
   <ItemGroup Condition="!$(DefineConstants.Contains('XNA')) And '$(TargetFrameworkIdentifier)' != '.NETFramework'">
-    <PackageReference Include="AristurtleDev.Forme" Version="0.0.3" />
-    <PackageReference Include="AristurtleDev.Forme.MonoGame" Version="0.0.3" />
+    <PackageReference Include="CnCNet.Forme.NET48" Version="0.0.3.1" />
+    <PackageReference Include="CnCNet.Forme.MonoGame.NET48" Version="0.0.3.1" />
   </ItemGroup>
 
 </Project>

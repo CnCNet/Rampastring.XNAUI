@@ -196,7 +196,7 @@
     <PackageReference Include="FontStashSharp.XNA" Version="1.5.2" />
   </ItemGroup>
 
-  <ItemGroup Condition="!$(DefineConstants.Contains('XNA')) And '$(TargetFrameworkIdentifier)' != '.NETFramework'">
+  <ItemGroup Condition="!$(DefineConstants.Contains('XNA'))">
     <PackageReference Include="CnCNet.Forme.NET48" Version="0.0.3.1" />
     <PackageReference Include="CnCNet.Forme.MonoGame.NET48" Version="0.0.3.1" />
   </ItemGroup>

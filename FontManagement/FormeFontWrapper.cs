@@ -1,9 +1,10 @@
 #if !XNA
-using System;
-using Forme.MonoGame;
 using FontStashSharp;
+using Forme;
+using Forme.MonoGame;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Rampastring.XNAUI.FontManagement;
 
@@ -82,7 +83,10 @@ public class FormeFontWrapper : IFont, IDisposable
         Renderer.EndDraw();
 
         _renderer.Begin();
-        _renderer.DrawString(_fontDevice, text, baseline, _sizePixels * scale, color);
+        // Note: explicitly passing through `new TextLayoutOptions()` to workaround the following issue:
+        // '\n' in DrawString doesn't work without TextLayoutOptions #12
+        // https://github.com/AristurtleDev/Forme/issues/12
+        _renderer.DrawString(_fontDevice, text, baseline, _sizePixels * scale, color, options: new TextLayoutOptions());
         _renderer.End();
 
         Renderer.BeginDraw();

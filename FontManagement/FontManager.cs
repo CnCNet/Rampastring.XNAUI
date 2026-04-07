@@ -7,6 +7,10 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Rampastring.Tools;
+#if !XNA
+using Forme;
+using Forme.MonoGame;
+#endif
 
 namespace Rampastring.XNAUI.FontManagement;
 
@@ -210,6 +214,12 @@ public static class FontManager
                     string sfName = Path.GetFileNameWithoutExtension(config.Path);
                     LoadSpriteFont(contentManager, searchPath, sfName);
                     break;
+
+#if !XNA
+                case FontType.Forme:
+                    CreateFormeFontIndex(i, config, searchPath);
+                    break;
+#endif
             }
         }
     }
@@ -328,6 +338,79 @@ public static class FontManager
             Fallback = fallback;
         }
     }
+
+#if !XNA
+    /// <summary>
+    /// Creates a Forme GPU font index from a TTF or <c>.forme</c> file.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// If a pre-processed <c>.forme</c> file (same base name as the TTF, with <c>.forme</c>
+    /// extension) exists in the same directory, it is loaded instead of the TTF to avoid
+    /// reprocessing on every launch. Otherwise the TTF is processed at startup and, if the
+    /// directory is writable, the result is saved as a <c>.forme</c> file for future runs.
+    /// </para>
+    /// <para>
+    /// Glyphs are baked for <see cref="CharacterSet.BasicLatin"/> (Unicode Basic Latin,
+    /// U+0020–U+007F). To support a wider character set, pre-process the font with a custom
+    /// <see cref="CharacterSet"/> using <c>FormeFont.FromTtf</c> and save it as a
+    /// <c>.forme</c> file next to the TTF.
+    /// </para>
+    /// </remarks>
+    private static void CreateFormeFontIndex(int fontIndex, FontConfig config, string searchPath)
+    {
+        if (string.IsNullOrEmpty(config.Path))
+        {
+            Logger.Log($"FontManager: Font{fontIndex} - Forme font has no path configured, skipping");
+            return;
+        }
+
+        string ttfFullPath = SafePath.GetFile(searchPath, config.Path).FullName;
+        if (!File.Exists(ttfFullPath))
+        {
+            Logger.Log($"FontManager: Font{fontIndex} - Forme font file not found: {ttfFullPath}");
+            return;
+        }
+
+        try
+        {
+            // Look for a pre-processed .forme file alongside the TTF.
+            string formePath = System.IO.Path.ChangeExtension(ttfFullPath, ".forme");
+            FormeFont formeFont;
+
+            if (File.Exists(formePath))
+            {
+                formeFont = FormeFont.FromFile(formePath);
+                Logger.Log($"FontManager: Font{fontIndex} - Loaded pre-processed font from {formePath}");
+            }
+            else
+            {
+                byte[] ttfData = File.ReadAllBytes(ttfFullPath);
+                formeFont = FormeFont.FromTtf(ttfData, CharacterSet.BasicLatin);
+                Logger.Log($"FontManager: Font{fontIndex} - Processed TTF font from {ttfFullPath}");
+
+                // Try to save the processed font for faster future loads.
+                try
+                {
+                    formeFont.Save(formePath);
+                    Logger.Log($"FontManager: Font{fontIndex} - Saved processed font to {formePath}");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log($"FontManager: Font{fontIndex} - Could not save processed font to {formePath}: {ex.Message}");
+                }
+            }
+
+            var fontDevice = new FormeFontDevice(Renderer.GraphicsDevice, formeFont);
+            fonts.Add(new FormeFontWrapper(fontDevice, Renderer.FormeRenderer, config.Size));
+            Logger.Log($"FontManager: Created FontIndex {fonts.Count - 1}: Forme size {config.Size} ({System.IO.Path.GetFileName(config.Path)})");
+        }
+        catch (Exception ex)
+        {
+            Logger.Log($"FontManager: Font{fontIndex} - Failed to create Forme font from {config.Path}: {ex.Message}");
+        }
+    }
+#endif
 
     /// <summary>
     /// Loads a SpriteFont and adds it to the font list.

@@ -5,6 +5,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using FontStashSharp;
 using Rampastring.XNAUI.FontManagement;
+#if !XNA
+using Forme.MonoGame;
+#endif
 #if XNA
 using System.Reflection;
 #endif
@@ -40,11 +43,30 @@ public static class Renderer
 
     internal static SpriteBatchSettings CurrentSettings;
 
+#if !XNA
+    /// <summary>
+    /// Gets the <see cref="Microsoft.Xna.Framework.Graphics.GraphicsDevice"/> used for rendering.
+    /// Available after <see cref="Initialize"/> has been called.
+    /// </summary>
+    internal static GraphicsDevice GraphicsDevice { get; private set; }
+
+    /// <summary>
+    /// Gets the shared <see cref="Forme.MonoGame.FormeRenderer"/> used by <see cref="FormeFontWrapper"/>.
+    /// Available after <see cref="Initialize"/> has been called.
+    /// </summary>
+    internal static FormeRenderer FormeRenderer { get; private set; }
+#endif
+
     public static SpriteBatchSettings GetCurrentSettings() => CurrentSettings;
 
     public static void Initialize(GraphicsDevice gd, ContentManager content)
     {
         spriteBatch = new SpriteBatch(gd);
+
+#if !XNA
+        GraphicsDevice = gd;
+        FormeRenderer = new FormeRenderer(gd);
+#endif
 
         FontManager.Initialize();
         FontManager.LoadFonts(content);

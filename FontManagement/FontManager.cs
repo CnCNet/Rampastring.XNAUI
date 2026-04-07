@@ -375,7 +375,7 @@ public static class FontManager
         try
         {
             // Look for a pre-processed .forme file alongside the TTF.
-            string formePath = System.IO.Path.ChangeExtension(ttfFullPath, ".forme");
+            string formePath = Path.ChangeExtension(ttfFullPath, ".forme");
             FormeFont formeFont;
 
             if (File.Exists(formePath))
@@ -403,7 +403,7 @@ public static class FontManager
 
             var fontDevice = new FormeFontDevice(Renderer.GraphicsDevice, formeFont);
             fonts.Add(new FormeFontWrapper(fontDevice, Renderer.FormeRenderer, config.Size));
-            Logger.Log($"FontManager: Created FontIndex {fonts.Count - 1}: Forme size {config.Size} ({System.IO.Path.GetFileName(config.Path)})");
+            Logger.Log($"FontManager: Created FontIndex {fonts.Count - 1}: Forme size {config.Size} ({Path.GetFileName(config.Path)})");
         }
         catch (Exception ex)
         {

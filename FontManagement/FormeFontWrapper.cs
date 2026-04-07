@@ -92,9 +92,9 @@ public class FormeFontWrapper : IFont, IDisposable
     public void DrawString(SpriteBatch spriteBatch, StringSegment text, Vector2 location, Color color, float rotation, Vector2 origin, Vector2 scale, float depth)
     {
         // StringSegment overload: convert to string and delegate.
-        // Rotation and non-uniform scale are not supported by FormeRenderer;
-        // use the average of x/y scale as a uniform approximation.
-        float uniformScale = (scale.X + scale.Y) * 0.5f;
+        // Rotation is not supported by FormeRenderer. For non-uniform scale, the larger
+        // axis is used so that text is never clipped.
+        float uniformScale = Math.Max(scale.X, scale.Y);
         DrawString(spriteBatch, text.ToString(), location, color, uniformScale, depth);
     }
 

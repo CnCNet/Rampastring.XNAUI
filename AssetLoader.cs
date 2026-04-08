@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Rampastring.Tools;
@@ -8,6 +9,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Media;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
 using Color = Microsoft.Xna.Framework.Color;
 using System.Globalization;
 
@@ -322,6 +324,89 @@ public static class AssetLoader
         catch
         {
             return defaultColor;
+        }
+    }
+
+    /// <summary>
+    /// Loads every frame of an animated GIF file and returns the per-frame display durations
+    /// in milliseconds together with deflate-compressed premultiplied-RGBA pixel data for each
+    /// frame. Storing compressed <see cref="byte"/> arrays instead of raw <see cref="Color"/>
+    /// arrays keeps RAM usage low; the caller decompresses one frame at a time as needed
+    /// (see <see cref="XNAControls.XNAAnimatedControl"/>).
+    /// The <paramref name="name"/> parameter is first looked up relative to each path in
+    /// <see cref="AssetSearchPaths"/>; if not found there it is tried as an absolute path.
+    /// Returns empty arrays when the file cannot be found or decoded.
+    /// </summary>
+    /// <param name="name">A relative asset name or an absolute file path.</param>
+    public static (byte[][] CompressedFrames, int[] FrameDelaysMs, int Width, int Height) LoadGifFrames(string name)
+    {
+        string filePath = null;
+
+        foreach (string searchPath in AssetSearchPaths)
+        {
+            FileInfo candidate = SafePath.GetFile(searchPath, name);
+            if (candidate.Exists)
+            {
+                filePath = candidate.FullName;
+                break;
+            }
+        }
+
+        if (filePath == null && File.Exists(name))
+            filePath = name;
+
+        if (filePath == null)
+        {
+            Logger.Log("AssetLoader.LoadGifFrames: File not found: " + name);
+            return (Array.Empty<byte[]>(), Array.Empty<int>(), 0, 0);
+        }
+
+        try
+        {
+            using var gif = Image.Load<Rgba32>(filePath);
+            int count = gif.Frames.Count;
+            int totalPixels = gif.Width * gif.Height;
+            var frames = new byte[count][];
+            var delays = new int[count];
+
+            // Shared buffers allocated once for all frames.
+            var rgbaBuffer = new Rgba32[totalPixels];
+            var rawBuffer = new byte[totalPixels * 4]; // premultiplied RGBA bytes, one frame
+
+            for (int i = 0; i < count; i++)
+            {
+                // GIF frame delay is stored in centiseconds (1/100 s); convert to ms.
+                int delayCs = gif.Frames[i].Metadata.GetGifMetadata().FrameDelay;
+                delays[i] = delayCs > 0 ? delayCs * 10 : 100; // default to 10 fps
+
+                // CloneFrame composites the frame correctly (handles disposal method, offsets, etc.).
+                using var composited = gif.Frames.CloneFrame(i);
+                composited.CopyPixelDataTo(rgbaBuffer);
+
+                // Premultiply alpha and pack into a flat byte array.
+                for (int j = 0; j < totalPixels; j++)
+                {
+                    byte a = rgbaBuffer[j].A;
+                    rawBuffer[j * 4]     = (byte)(rgbaBuffer[j].R * a / 255);
+                    rawBuffer[j * 4 + 1] = (byte)(rgbaBuffer[j].G * a / 255);
+                    rawBuffer[j * 4 + 2] = (byte)(rgbaBuffer[j].B * a / 255);
+                    rawBuffer[j * 4 + 3] = a;
+                }
+
+                // Deflate-compress and store. Frames with solid / repeated colours
+                // (common in documentation GIFs) compress by 10–50×.
+                using var ms = new MemoryStream();
+                using (var deflate = new DeflateStream(ms, CompressionLevel.Fastest, leaveOpen: true))
+                    deflate.Write(rawBuffer, 0, rawBuffer.Length);
+                frames[i] = ms.ToArray();
+            }
+
+            return (frames, delays, gif.Width, gif.Height);
+        }
+        catch (Exception ex)
+        {
+            Logger.Log("AssetLoader.LoadGifFrames: Failed to load '" + name + "': " + ex.Message);
+            return (Array.Empty<byte[]>(), Array.Empty<int>(), 0, 0);
         }
     }
 

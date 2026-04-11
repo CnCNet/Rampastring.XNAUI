@@ -884,11 +884,10 @@ public class WindowManager : DrawableGameComponent
             var c = _tunnelingPath[i];
             if (!c.InputPassthrough)
             {
-                if ((c.HandledMouseInputs & mouseInputFlags) == mouseInputFlags)
-                    inputEventArgs.Handled = true;
+                bool stopTunneling = (c.HandledMouseInputs & mouseInputFlags) == mouseInputFlags;
 
                 action(c, inputEventArgs);
-                if (inputEventArgs.Handled)
+                if (inputEventArgs.Handled || stopTunneling)
                     break;
             }
         }

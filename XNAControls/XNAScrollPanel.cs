@@ -363,6 +363,27 @@ public class XNAScrollPanel : XNAPanel
         CurrentViewPosition = CurrentViewPosition with { Y = CurrentViewPosition.Y - Cursor.ScrollWheelValue * ScrollStep };
     }
 
+    public override void OnPreviewMouseScrolled(InputEventArgs inputEventArgs)
+    {
+        base.OnPreviewMouseScrolled(inputEventArgs);
+
+        inputEventArgs.Handled = true;
+
+        if (!CanScroll.Y || Keyboard.IsShiftHeldDown())
+            CurrentViewPosition = CurrentViewPosition with { X = CurrentViewPosition.X - Cursor.ScrollWheelValue * ScrollStep };
+        else
+            CurrentViewPosition = CurrentViewPosition with { Y = CurrentViewPosition.Y - Cursor.ScrollWheelValue * ScrollStep };
+    }
+
+    public override void OnPreviewMouseScrolledHorizontally(InputEventArgs inputEventArgs)
+    {
+        base.OnPreviewMouseScrolledHorizontally(inputEventArgs);
+
+        inputEventArgs.Handled = true;
+
+        CurrentViewPosition = CurrentViewPosition with { X = CurrentViewPosition.X - Cursor.HorizontalScrollWheelValue * ScrollStep };
+    }
+
     public override void OnMouseScrolled(InputEventArgs inputEventArgs)
     {
         inputEventArgs.Handled = true;

@@ -80,6 +80,27 @@ public class SoundPlayer : GameComponent
         soundList?.Add(prioritizedSoundInstance);
     }
 
+    public static void StopAll()
+    {
+        if (soundList == null)
+            return;
+
+        for (int i = 0; i < soundList.Count; i++)
+        {
+            try
+            {
+                soundList[i].SoundInstance.Stop();
+            }
+            catch
+            {
+            }
+
+            soundList[i].Dispose();
+        }
+
+        soundList.Clear();
+    }
+
     public override void Update(GameTime gameTime)
     {
         for (int i = 0; i < soundList.Count; i++)

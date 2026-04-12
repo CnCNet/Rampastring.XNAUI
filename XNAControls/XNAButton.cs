@@ -243,12 +243,6 @@ public class XNAButton : XNAControl
 
         if (HoverTexture != null)
             HoverTexture.Dispose();
-
-        if (HoverSoundEffect != null)
-            HoverSoundEffect.Dispose();
-
-        if (ClickSoundEffect != null)
-            ClickSoundEffect.Dispose();
     }
 
     public override void Update(GameTime gameTime)

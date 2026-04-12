@@ -287,6 +287,7 @@ public class WindowManager : DrawableGameComponent
         Game.Exiting -= GameWindowManager_GameWindowClosing;
 #endif
         GameClosing?.Invoke(this, EventArgs.Empty);
+        SoundPlayer.StopAll();
         Game.Exit();
     }
 
@@ -302,6 +303,7 @@ public class WindowManager : DrawableGameComponent
         // can take over 8 seconds while XNA takes only 1 second
         // This is a bit dirty, but at least it makes the MonoGame build exit quicker
         GameClosing?.Invoke(this, EventArgs.Empty);
+        SoundPlayer.StopAll();
         // TODO move Windows-specific functionality
 #if WINFORMS
         Application.DoEvents();
@@ -316,7 +318,7 @@ public class WindowManager : DrawableGameComponent
         });
 #endif
 
-        Environment.Exit(0);
+        Game.Exit();
 #else
         Application.Restart();
 #endif
@@ -369,6 +371,7 @@ public class WindowManager : DrawableGameComponent
 
     private void GameWindowManager_GameWindowClosing(object sender, EventArgs e)
     {
+        SoundPlayer.StopAll();
         GameClosing?.Invoke(this, EventArgs.Empty);
     }
 

@@ -247,7 +247,7 @@ public class WindowManager : DrawableGameComponent
         RenderTargetStack.Initialize(renderTarget, GraphicsDevice);
         RenderTargetStack.InitDetachedScaledControlRenderTarget(RenderResolutionX, RenderResolutionY);
 
-        if (ScaleRatio > 1.5 && ScaleRatio % 1.0 == 0)
+        if (ScaleRatio > 1.5 && ScaleRatio % 2.0 == 0)
         {
 #if XNA
             if (RenderResolutionX * 2 > XNA_MAX_TEXTURE_SIZE || RenderResolutionY * 2 > XNA_MAX_TEXTURE_SIZE)

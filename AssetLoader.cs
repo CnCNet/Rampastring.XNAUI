@@ -7,7 +7,7 @@ using Rampastring.Tools;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Media;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Bmp;
+using SixLabors.ImageSharp.PixelFormats;
 using Color = Microsoft.Xna.Framework.Color;
 using System.Globalization;
 
@@ -213,10 +213,36 @@ public static class AssetLoader
     {
         try
         {
-            using var stream = new MemoryStream();
-            image.Save(stream, new BmpEncoder() { BitsPerPixel = BmpBitsPerPixel.Pixel32, SupportTransparency = true });
-            var texture = Texture2D.FromStream(graphicsDevice, stream);
-            PremultiplyAlpha(texture);
+            using Image<Rgba32> rgbaImage = image.CloneAs<Rgba32>();
+            var texture = new Texture2D(graphicsDevice, rgbaImage.Width, rgbaImage.Height, false, SurfaceFormat.Color);
+            var colorData = new Color[rgbaImage.Width * rgbaImage.Height];
+            int colorIndex = 0;
+
+            rgbaImage.ProcessPixelRows(accessor =>
+            {
+                for (int y = 0; y < accessor.Height; y++)
+                {
+                    Span<Rgba32> row = accessor.GetRowSpan(y);
+                    for (int x = 0; x < row.Length; x++)
+                    {
+                        Rgba32 pixel = row[x];
+                        byte alpha = pixel.A;
+
+                        colorData[colorIndex++] = alpha switch
+                        {
+                            0 => Color.Transparent,
+                            255 => new Color(pixel.R, pixel.G, pixel.B, alpha),
+                            _ => new Color(
+                                (byte)(pixel.R * alpha / 255),
+                                (byte)(pixel.G * alpha / 255),
+                                (byte)(pixel.B * alpha / 255),
+                                alpha)
+                        };
+                    }
+                }
+            });
+
+            texture.SetData(colorData);
             return texture;
         }
         catch (Exception ex)

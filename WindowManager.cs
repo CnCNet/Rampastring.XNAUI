@@ -172,6 +172,7 @@ public class WindowManager : DrawableGameComponent
     private IGameWindowManager gameWindowManager;
     private RenderTarget2D renderTarget;
     private RenderTarget2D doubledRenderTarget;
+    private float _lastFontScaleRatio = 1.0f;
 
     /// <summary>
     /// Sets the rendering (back buffer) resolution of the game.
@@ -254,7 +255,7 @@ public class WindowManager : DrawableGameComponent
         RenderTargetStack.Initialize(renderTarget, GraphicsDevice);
         RenderTargetStack.InitDetachedScaledControlRenderTarget(RenderResolutionX, RenderResolutionY);
 
-        if (ScaleRatio > 1.5 && ScaleRatio % 1.0 == 0)
+        if (ScaleRatio > 1.5 && ScaleRatio % 2.0 == 0)
         {
 #if XNA
             if (RenderResolutionX * 2 > XNA_MAX_TEXTURE_SIZE || RenderResolutionY * 2 > XNA_MAX_TEXTURE_SIZE)
@@ -272,6 +273,13 @@ public class WindowManager : DrawableGameComponent
         else
         {
             doubledRenderTarget = null;
+        }
+
+        float floatScaleRatio = (float)ScaleRatio;
+        if (floatScaleRatio != _lastFontScaleRatio)
+        {
+            _lastFontScaleRatio = floatScaleRatio;
+            Renderer.ReloadFontsForScale(floatScaleRatio);
         }
     }
 

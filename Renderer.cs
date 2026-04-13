@@ -33,6 +33,7 @@ public struct SpriteBatchSettings
 public static class Renderer
 {
     private static SpriteBatch spriteBatch;
+    private static ContentManager _contentManager;
 
     private static Texture2D whitePixelTexture;
 
@@ -45,11 +46,25 @@ public static class Renderer
     public static void Initialize(GraphicsDevice gd, ContentManager content)
     {
         spriteBatch = new SpriteBatch(gd);
+        _contentManager = content;
 
         FontManager.Initialize();
         FontManager.LoadFonts(content);
 
         whitePixelTexture = AssetLoader.CreateTexture(Color.White, 1, 1);
+    }
+
+    /// <summary>
+    /// Reloads fonts with a new resolution factor matching the given scale ratio,
+    /// so TTF glyphs are rasterized at native display quality rather than being
+    /// scaled up from the render resolution.
+    /// </summary>
+    internal static void ReloadFontsForScale(float scaleRatio)
+    {
+        if (_contentManager == null)
+            return;
+
+        FontManager.LoadFonts(_contentManager, scaleRatio);
     }
 
     /// <summary>

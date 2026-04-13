@@ -36,6 +36,7 @@ public static class FontManager
     private static List<IFont> fonts;
     private static List<FontSystem> fontSystems = new();
     private static TextShapingSettings textShapingSettings = new();
+    private static float _fontResolutionFactor = 1.0f;
 
     public static void Initialize()
     {
@@ -57,7 +58,10 @@ public static class FontManager
     /// </summary>
     private static FontSystem CreateFontSystem()
     {
-        var settings = new FontSystemSettings();
+        var settings = new FontSystemSettings
+        {
+            FontResolutionFactor = _fontResolutionFactor
+        };
 
         if (textShapingSettings.Enabled)
         {
@@ -98,8 +102,10 @@ public static class FontManager
     /// - For SpriteFonts: Load the .xnb file
     /// </para>
     /// </remarks>
-    public static void LoadFonts(ContentManager contentManager)
+    public static void LoadFonts(ContentManager contentManager, float fontResolutionFactor = 1.0f)
     {
+        _fontResolutionFactor = fontResolutionFactor;
+
         fonts ??= [];
         fonts.Clear();
         fontSystems.Clear();

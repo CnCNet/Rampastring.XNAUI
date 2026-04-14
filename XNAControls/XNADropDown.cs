@@ -349,7 +349,7 @@ public class XNADropDown : XNAControl
         hoveredIndex = -1;
     }
 
-    public void OpenDropDown()
+    public virtual void OpenDropDown()
     {
         TopIndex = 0;
 

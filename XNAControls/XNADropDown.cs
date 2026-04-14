@@ -568,17 +568,24 @@ public class XNADropDown : XNAControl
                 float maxWidth = availableWidth - ellipsisWidth;
 
                 int bestFit = 0;
-                float currentWidth = 0f;
+                int low = 0;
+                int high = item.Text.Length;
 
-                for (int i = 0; i < item.Text.Length; i++)
+                while (low <= high)
                 {
-                    string test = item.Text.Substring(0, i + 1);
-                    currentWidth = Renderer.MeasureString(test, FontIndex).X;
+                    int mid = low + ((high - low) / 2);
+                    string test = item.Text.Substring(0, mid);
+                    float currentWidth = Renderer.MeasureString(test, FontIndex).X;
 
-                    if (currentWidth > maxWidth)
-                        break;
-
-                    bestFit = i + 1;
+                    if (currentWidth <= maxWidth)
+                    {
+                        bestFit = mid;
+                        low = mid + 1;
+                    }
+                    else
+                    {
+                        high = mid - 1;
+                    }
                 }
 
                 displayText = item.Text.Substring(0, bestFit) + ellipsis;

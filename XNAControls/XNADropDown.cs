@@ -495,9 +495,9 @@ public class XNADropDown : XNAControl
     {
         Point p = GetCursorPoint();
 
-        int hitTestWidth = DropDownState != DropDownState.CLOSED ? openWidth : Width;
+        int effectiveWidth = DropDownState != DropDownState.CLOSED ? Math.Max(Width, openWidth) : Width;
 
-        if (p.X < 0 || p.X > hitTestWidth ||
+        if (p.X < 0 || p.X > effectiveWidth ||
             p.Y > Height ||
             p.Y < 0)
         {
@@ -651,10 +651,11 @@ public class XNADropDown : XNAControl
 
                 Rectangle listRectangle;
 
+                int effectiveOpenWidth = Math.Max(Width, openWidth);
                 if (DropDownState == DropDownState.OPENED_DOWN)
-                    listRectangle = new Rectangle(0, DropDownTexture.Height, openWidth, Height - DropDownTexture.Height);
+                    listRectangle = new Rectangle(0, DropDownTexture.Height, effectiveOpenWidth, Height - DropDownTexture.Height);
                 else
-                    listRectangle = new Rectangle(0, 0, openWidth, Height - DropDownTexture.Height);
+                    listRectangle = new Rectangle(0, 0, effectiveOpenWidth, Height - DropDownTexture.Height);
 
                 DrawRectangle(listRectangle, BorderColor);
 
@@ -683,7 +684,7 @@ public class XNADropDown : XNAControl
     {
         XNADropDownItem item = Items[index];
 
-        int itemWidth = DropDownState != DropDownState.CLOSED ? openWidth : Width;
+        int itemWidth = DropDownState != DropDownState.CLOSED ? Math.Max(Width, openWidth) : Width;
 
         if (hoveredIndex == index)
         {

@@ -202,6 +202,9 @@ public class WindowManager : DrawableGameComponent
         int clientAreaWidth = Game.Window.ClientBounds.Width;
         int clientAreaHeight = Game.Window.ClientBounds.Height;
 
+        if (clientAreaWidth <= 0 || clientAreaHeight <= 0)
+            return;
+            
         double xRatio = clientAreaWidth / (double)RenderResolutionX;
         double yRatio = clientAreaHeight / (double)RenderResolutionY;
 

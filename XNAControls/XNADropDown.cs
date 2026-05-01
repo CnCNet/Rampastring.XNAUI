@@ -176,8 +176,24 @@ public class XNADropDown : XNAControl
     private int hoveredIndex = 0;
     private bool clickedAfterOpen = false;
     private int numFittingItems = 0;
-    private int openWidth = 0;
 
+    /// <summary>
+    /// The width of the open dropdown list. Computed in <see cref="OpenDropDown"/> as the
+    /// maximum of <see cref="XNAControl.Width"/> and the widest item's content width, so
+    /// wide items remain fully visible when the list is expanded.
+    /// </summary>
+    private int expandedListWidth = 0;
+
+    /// <summary>
+    /// Current visible width of the control, accounting for whether the dropdown list
+    /// is open and may be wider than the closed-state <see cref="XNAControl.Width"/>.
+    /// </summary>
+    private int CurrentDisplayWidth =>
+        DropDownState != DropDownState.CLOSED ? Math.Max(Width, expandedListWidth) : Width;
+
+    // Cache for the truncated display text produced by GetDisplayTextForSelectedItem.
+    // That method is called every frame from DrawSelectedItem; without this cache it
+    // would re-run the per-character MeasureString truncation loop on each draw.
     private string cachedDisplayText = null;
     private int cachedSelectedIndex = -1;
     private int cachedWidth = 0;
@@ -354,7 +370,7 @@ public class XNADropDown : XNAControl
         TopIndex = 0;
 
         // What's the max width that fits all items
-        openWidth = Width;
+        expandedListWidth = Width;
         foreach (var item in Items)
         {
             int itemWidth = 4; //padding
@@ -363,8 +379,8 @@ public class XNADropDown : XNAControl
             if (item.Text != null)
                 itemWidth += (int)Renderer.MeasureString(item.Text, FontIndex).X;
 
-            if (itemWidth > openWidth)
-                openWidth = itemWidth;
+            if (itemWidth > expandedListWidth)
+                expandedListWidth = itemWidth;
         }
 
         if (!OpenUp)
@@ -495,9 +511,7 @@ public class XNADropDown : XNAControl
     {
         Point p = GetCursorPoint();
 
-        int effectiveWidth = DropDownState != DropDownState.CLOSED ? Math.Max(Width, openWidth) : Width;
-
-        if (p.X < 0 || p.X > effectiveWidth ||
+        if (p.X < 0 || p.X > CurrentDisplayWidth ||
             p.Y > Height ||
             p.Y < 0)
         {
@@ -651,11 +665,10 @@ public class XNADropDown : XNAControl
 
                 Rectangle listRectangle;
 
-                int effectiveOpenWidth = Math.Max(Width, openWidth);
                 if (DropDownState == DropDownState.OPENED_DOWN)
-                    listRectangle = new Rectangle(0, DropDownTexture.Height, effectiveOpenWidth, Height - DropDownTexture.Height);
+                    listRectangle = new Rectangle(0, DropDownTexture.Height, CurrentDisplayWidth, Height - DropDownTexture.Height);
                 else
-                    listRectangle = new Rectangle(0, 0, effectiveOpenWidth, Height - DropDownTexture.Height);
+                    listRectangle = new Rectangle(0, 0, CurrentDisplayWidth, Height - DropDownTexture.Height);
 
                 DrawRectangle(listRectangle, BorderColor);
 
@@ -684,7 +697,7 @@ public class XNADropDown : XNAControl
     {
         XNADropDownItem item = Items[index];
 
-        int itemWidth = DropDownState != DropDownState.CLOSED ? Math.Max(Width, openWidth) : Width;
+        int itemWidth = CurrentDisplayWidth;
 
         if (hoveredIndex == index)
         {

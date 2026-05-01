@@ -36,7 +36,7 @@ public static class FontManager
     private static List<IFont> fonts;
     private static List<FontSystem> fontSystems = new();
     private static TextShapingSettings textShapingSettings = new();
-    private static float _fontResolutionFactor = 1.0f;
+    private static FontRenderingSettings fontRenderingSettings = new();
 
     public static void Initialize()
     {
@@ -47,6 +47,11 @@ public static class FontManager
     /// Gets the current text shaping settings.
     /// </summary>
     public static TextShapingSettings GetTextShapingSettings() => textShapingSettings;
+
+    /// <summary>
+    /// Gets the current font rendering settings.
+    /// </summary>
+    public static FontRenderingSettings GetFontRenderingSettings() => fontRenderingSettings;
 
     /// <summary>
     /// Checks if text shaping is currently enabled.
@@ -60,7 +65,13 @@ public static class FontManager
     {
         var settings = new FontSystemSettings
         {
-            FontResolutionFactor = _fontResolutionFactor
+            KernelWidth = fontRenderingSettings.KernelWidth,
+            KernelHeight = fontRenderingSettings.KernelHeight,
+            FontResolutionFactor = fontRenderingSettings.FontResolutionFactor,
+            TextureWidth = fontRenderingSettings.TextureWidth,
+            TextureHeight = fontRenderingSettings.TextureHeight,
+            GlyphRenderResult = fontRenderingSettings.GlyphRenderResult,
+            UseEmToPixelsScale = true
         };
 
         if (textShapingSettings.Enabled)
@@ -102,16 +113,20 @@ public static class FontManager
     /// - For SpriteFonts: Load the .xnb file
     /// </para>
     /// </remarks>
-    public static void LoadFonts(ContentManager contentManager, float fontResolutionFactor = 1.0f)
+    /// <param name="fontResolutionFactor">
+    /// When non-null, overrides any <c>FontResolutionFactor</c> from <c>[FontRendering]</c>
+    /// in <c>Fonts.ini</c>. Used by <see cref="Renderer.ReloadFontsForScale"/> to keep TTF
+    /// glyphs sharp when the render target is upscaled.
+    /// </param>
+    public static void LoadFonts(ContentManager contentManager, float? fontResolutionFactor = null)
     {
-        _fontResolutionFactor = fontResolutionFactor;
-
         fonts ??= [];
         fonts.Clear();
         fontSystems.Clear();
 
-        // Reset text shaping settings
+        // Reset text shaping and rendering settings
         textShapingSettings = new TextShapingSettings();
+        fontRenderingSettings = new FontRenderingSettings();
 
         string originalContentRoot = contentManager.RootDirectory;
         bool fontsIniFound = false;
@@ -124,12 +139,18 @@ public static class FontManager
             if (File.Exists(iniPath))
             {
                 Logger.Log($"FontManager: Loading fonts from {iniPath}");
-                LoadFontsFromIni(iniPath, contentManager, searchPath, baseDir);
+                LoadFontsFromIni(iniPath, contentManager, searchPath, baseDir, fontResolutionFactor);
                 fontsIniFound = true;
                 // Stop after first Fonts.ini found
                 break;
             }
         }
+
+        // Apply the resolution-factor override even when no Fonts.ini was found
+        // (legacy SpriteFont path), so callers like Renderer.ReloadFontsForScale
+        // still take effect.
+        if (!fontsIniFound && fontResolutionFactor.HasValue)
+            fontRenderingSettings.FontResolutionFactor = fontResolutionFactor.Value;
 
         // Fall back to legacy SpriteFont loading if no Fonts.ini found
         if (!fontsIniFound)
@@ -157,7 +178,7 @@ public static class FontManager
     /// <summary>
     /// Loads fonts from a specific Fonts.ini file.
     /// </summary>
-    private static void LoadFontsFromIni(string iniPath, ContentManager contentManager, string searchPath, string baseDir)
+    private static void LoadFontsFromIni(string iniPath, ContentManager contentManager, string searchPath, string baseDir, float? fontResolutionFactorOverride = null)
     {
         var iniFile = new IniFile(iniPath);
 
@@ -166,6 +187,16 @@ public static class FontManager
         {
             LoadTextShapingSettings(iniFile);
         }
+
+        // Load font rendering settings
+        if (iniFile.SectionExists("FontRendering"))
+        {
+            LoadFontRenderingSettings(iniFile);
+        }
+
+        // Override after ini load so the runtime value wins
+        if (fontResolutionFactorOverride.HasValue)
+            fontRenderingSettings.FontResolutionFactor = fontResolutionFactorOverride.Value;
 
         CreateFontIndexesFromIni(iniFile, contentManager, searchPath, baseDir);
     }
@@ -180,6 +211,39 @@ public static class FontManager
             textShapingSettings.CacheSize = DefaultShapedTextCacheSize;
 
         Logger.Log($"FontManager: Text shaping settings: Enabled={textShapingSettings.Enabled}, BiDi={textShapingSettings.EnableBiDi}, CacheSize={textShapingSettings.CacheSize}");
+    }
+
+    private static void LoadFontRenderingSettings(IniFile iniFile)
+    {
+        int kernelWidth = iniFile.GetIntValue("FontRendering", "KernelWidth", 0);
+        int kernelHeight = iniFile.GetIntValue("FontRendering", "KernelHeight", 0);
+        float resolutionFactor = iniFile.GetSingleValue("FontRendering", "FontResolutionFactor", 1f);
+        int textureWidth = iniFile.GetIntValue("FontRendering", "TextureWidth", 1024);
+        int textureHeight = iniFile.GetIntValue("FontRendering", "TextureHeight", 1024);
+        string glyphResultStr = iniFile.GetStringValue("FontRendering", "GlyphRenderResult", nameof(GlyphRenderResult.Premultiplied));
+
+        if (kernelWidth < 0)
+            kernelWidth = 0;
+        if (kernelHeight < 0)
+            kernelHeight = 0;
+        if (resolutionFactor < 0f)
+            resolutionFactor = 0f;
+        if (textureWidth < 1)
+            textureWidth = 1;
+        if (textureHeight < 1)
+            textureHeight = 1;
+
+        if (!Enum.TryParse<GlyphRenderResult>(glyphResultStr, true, out var glyphResult))
+            glyphResult = GlyphRenderResult.Premultiplied;
+
+        fontRenderingSettings.KernelWidth = kernelWidth;
+        fontRenderingSettings.KernelHeight = kernelHeight;
+        fontRenderingSettings.FontResolutionFactor = resolutionFactor;
+        fontRenderingSettings.TextureWidth = textureWidth;
+        fontRenderingSettings.TextureHeight = textureHeight;
+        fontRenderingSettings.GlyphRenderResult = glyphResult;
+
+        Logger.Log($"FontManager: Font rendering settings: KernelWidth={fontRenderingSettings.KernelWidth}, KernelHeight={fontRenderingSettings.KernelHeight}, FontResolutionFactor={fontRenderingSettings.FontResolutionFactor}, TextureSize={fontRenderingSettings.TextureWidth}x{fontRenderingSettings.TextureHeight}, GlyphRenderResult={fontRenderingSettings.GlyphRenderResult}");
     }
 
     /// <summary>

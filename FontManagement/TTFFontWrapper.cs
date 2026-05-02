@@ -22,7 +22,11 @@ public class TTFFontWrapper : IFont
     public void DrawString(SpriteBatch spriteBatch, string text, Vector2 location, Color color, float scale, float depth)
     {
         var vectorScale = new Vector2(scale, scale);
+
+        // Some fonts render `\r` as a visible character, e.g., Unifont. Therefore, we normalize newlines.
+        text = text.Replace("\r\n", "\n").Replace('\r', '\n');
         var segment = new StringSegment(text);
+
         spriteBatch.DrawString(_font, segment, location, color, 0f, Vector2.Zero, vectorScale, depth);
     }
 

@@ -268,7 +268,7 @@ public static class FontManager
             int fallback = iniFile.GetIntValue(section, "Fallback", -1);
 
             if (!Enum.TryParse<FontType>(fontTypeStr, true, out var fontType))
-                fontType = FontType.SpriteFont;
+                throw new Exception($"Invalid font type for {section}: {fontTypeStr}");
 
             fontConfigs.Add(new FontConfig(fontPath, size, fontType, fallback));
         }
@@ -319,12 +319,12 @@ public static class FontManager
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"FontManager: Font{fontIndex} - Failed to load primary font {config.Path}: {ex.Message}");
+                    throw new Exception($"FontManager: Font{fontIndex} - Failed to load primary font {config.Path}: {ex.Message}");
                 }
             }
             else
             {
-                Logger.Log($"FontManager: Font{fontIndex} - Primary font not found: {fullPath}");
+                throw new Exception($"FontManager: Font{fontIndex} - Primary font not found: {fullPath}");
             }
         }
 
@@ -366,8 +366,7 @@ public static class FontManager
             }
             else
             {
-                Logger.Log($"FontManager: Font{fontIndex} - Fallback font not found: {fullPath}");
-                break;
+                throw new Exception($"FontManager: Font{fontIndex} - Fallback font not found: {fullPath}");
             }
 
             current = fallbackConfig.Fallback;
@@ -421,7 +420,7 @@ public static class FontManager
         }
         else
         {
-            Logger.Log($"FontManager: SpriteFont file not found: {fontName}.xnb");
+            throw new Exception($"FontManager: SpriteFont file not found: {fontName}.xnb");
         }
     }
 

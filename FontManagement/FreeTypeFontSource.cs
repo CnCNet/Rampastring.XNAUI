@@ -1,6 +1,6 @@
+using FontStashSharp.Interfaces;
 using System;
 using System.Runtime.InteropServices;
-using FontStashSharp.Interfaces;
 
 namespace Rampastring.XNAUI.FontManagement;
 
@@ -14,6 +14,8 @@ internal sealed class FreeTypeFontSource : IFontSource
     private static IntPtr _library;
     private GCHandle _memoryHandle;
     private IntPtr _face;
+
+    public int RenderMode { get; set; } = FT_RENDER_MODE_NORMAL;
 
     public FreeTypeFontSource(byte[] data)
     {
@@ -101,7 +103,7 @@ internal sealed class FreeTypeFontSource : IFontSource
         LoadGlyph(glyphId);
 
         IntPtr slotPtr = ReadFaceGlyphSlot(_face);
-        FT_Render_Glyph(slotPtr, FT_RENDER_MODE_NORMAL);
+        FT_Render_Glyph(slotPtr, RenderMode);
 
         FT_Bitmap bitmap = ReadGlyphSlotBitmap(slotPtr);
 

@@ -7,7 +7,16 @@ namespace Rampastring.XNAUI.FontManagement;
 /// Replaces FontStashSharp.Rasterizers.FreeType which has broken struct layouts on Windows x64
 /// (FreeTypeSharp maps C 'long' to IntPtr instead of int, causing struct field misalignment).
 /// </summary>
-internal sealed class FreeTypeFontLoader : IFontLoader
+public sealed class FreeTypeFontLoader : IFontLoader
 {
-    public IFontSource Load(byte[] data) => new FreeTypeFontSource(data);
+    public FreeTypeRenderMode RenderMode { get; } = FreeTypeRenderMode.Normal;
+
+    public FreeTypeFontLoader() { }
+
+    public FreeTypeFontLoader(FreeTypeRenderMode renderMode)
+    {
+        RenderMode = renderMode;
+    }
+
+    public IFontSource Load(byte[] data) => new FreeTypeFontSource(data) { RenderMode = RenderMode };
 }

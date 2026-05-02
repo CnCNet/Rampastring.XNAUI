@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using FontStashSharp;
+using FontStashSharp.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -61,7 +62,7 @@ public static class FontManager
     /// <summary>
     /// Creates a new FontSystem with current text shaping settings.
     /// </summary>
-    private static FontSystem CreateFontSystem()
+    private static FontSystem CreateFontSystem(IFontLoader fontLoader = null)
     {
         var settings = new FontSystemSettings
         {
@@ -72,7 +73,7 @@ public static class FontManager
             TextureHeight = fontRenderingSettings.TextureHeight,
             GlyphRenderResult = fontRenderingSettings.GlyphRenderResult,
             UseEmToPixelsScale = true,
-            FontLoader = new FreeTypeFontLoader(),
+            FontLoader = fontLoader,
         };
 
         if (textShapingSettings.Enabled)
@@ -85,7 +86,7 @@ public static class FontManager
             settings.ShapedTextCacheSize = textShapingSettings.CacheSize;
         }
 
-        return new FontSystem(settings);
+        return new FontSystem(settings) { DefaultCharacter = '?' };
     }
 
     public static Vector2 MeasureString(string text, int fontIndex)
@@ -266,12 +267,16 @@ public static class FontManager
             string fontPath = iniFile.GetStringValue(section, "Path", "");
             int size = iniFile.GetIntValue(section, "Size", 16);
             string fontTypeStr = iniFile.GetStringValue(section, "Type", nameof(FontType.SpriteFont));
+            string fontLoaderStr = iniFile.GetStringValue(section, "Loader", nameof(TTFFontLoader.StbTrueType));
             int fallback = iniFile.GetIntValue(section, "Fallback", -1);
 
             if (!Enum.TryParse<FontType>(fontTypeStr, true, out var fontType))
-                fontType = FontType.SpriteFont;
+                throw new Exception($"Invalid font type for {section}: {fontTypeStr}");
 
-            fontConfigs.Add(new FontConfig(fontPath, size, fontType, fallback));
+            if (!Enum.TryParse<TTFFontLoader>(fontLoaderStr, true, out var fontLoader))
+                throw new Exception($"Invalid font loader for {section}: {fontLoaderStr}");
+
+            fontConfigs.Add(new FontConfig(fontPath, size, fontType, fontLoader, fallback));
         }
 
         for (int i = 0; i < fontCount; i++)
@@ -300,7 +305,16 @@ public static class FontManager
     /// </summary>
     private static void CreateTrueTypeFontIndex(int fontIndex, FontConfig config, List<FontConfig> allConfigs, string searchPath)
     {
-        FontSystem fontSystem = CreateFontSystem();
+        IFontLoader fontLoader = config.FontLoader switch
+        {
+            TTFFontLoader.StbTrueType => null,
+            TTFFontLoader.FreeType => new FreeTypeFontLoader(FreeTypeRenderMode.Normal),
+            TTFFontLoader.FreeTypeMono => new FreeTypeFontLoader(FreeTypeRenderMode.Mono),
+            TTFFontLoader.Forme => throw new NotImplementedException("Forme font loader is not implemented yet"),
+            _ => throw new Exception($"Unsupported font loader for Font{fontIndex}: {config.FontLoader}")
+        };
+
+        FontSystem fontSystem = CreateFontSystem(fontLoader);
         fontSystem.DefaultCharacter = '?';
         fontSystems.Add(fontSystem);
 
@@ -320,12 +334,12 @@ public static class FontManager
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"FontManager: Font{fontIndex} - Failed to load primary font {config.Path}: {ex.Message}");
+                    throw new Exception($"FontManager: Font{fontIndex} - Failed to load primary font {config.Path}: {ex.Message}");
                 }
             }
             else
             {
-                Logger.Log($"FontManager: Font{fontIndex} - Primary font not found: {fullPath}");
+                throw new Exception($"FontManager: Font{fontIndex} - Primary font not found: {fullPath}");
             }
         }
 
@@ -367,8 +381,7 @@ public static class FontManager
             }
             else
             {
-                Logger.Log($"FontManager: Font{fontIndex} - Fallback font not found: {fullPath}");
-                break;
+                throw new Exception($"FontManager: Font{fontIndex} - Fallback font not found: {fullPath}");
             }
 
             current = fallbackConfig.Fallback;
@@ -397,13 +410,15 @@ public static class FontManager
         public string Path { get; }
         public int Size { get; }
         public FontType FontType { get; }
+        public TTFFontLoader FontLoader { get; }
         public int Fallback { get; }
 
-        public FontConfig(string path, int size, FontType fontType, int fallback)
+        public FontConfig(string path, int size, FontType fontType, TTFFontLoader fontLoader, int fallback)
         {
             Path = path;
             Size = size;
             FontType = fontType;
+            FontLoader = fontLoader;
             Fallback = fallback;
         }
     }
@@ -422,7 +437,7 @@ public static class FontManager
         }
         else
         {
-            Logger.Log($"FontManager: SpriteFont file not found: {fontName}.xnb");
+            throw new Exception($"FontManager: SpriteFont file not found: {fontName}.xnb");
         }
     }
 

@@ -9,13 +9,13 @@ namespace Rampastring.XNAUI.FontManagement;
 /// Unlike FreeTypeSharp, this correctly maps FT_Pos/FT_Fixed (C 'long') to 'int' on Windows,
 /// where C 'long' is always 4 bytes regardless of 32/64-bit.
 /// </summary>
-internal sealed class FreeTypeFontSource : IFontSource
+public sealed class FreeTypeFontSource : IFontSource
 {
     private static IntPtr _library;
     private GCHandle _memoryHandle;
     private IntPtr _face;
 
-    public int RenderMode { get; set; } = FT_RENDER_MODE_NORMAL;
+    public FreeTypeRenderMode RenderMode { get; set; } = FreeTypeRenderMode.Normal;
 
     public FreeTypeFontSource(byte[] data)
     {
@@ -103,7 +103,19 @@ internal sealed class FreeTypeFontSource : IFontSource
         LoadGlyph(glyphId);
 
         IntPtr slotPtr = ReadFaceGlyphSlot(_face);
-        FT_Render_Glyph(slotPtr, RenderMode);
+
+        int renderMode = RenderMode switch
+        {
+            FreeTypeRenderMode.Normal => (int)FT_Render_Mode_.FT_RENDER_MODE_NORMAL,
+            FreeTypeRenderMode.Light => (int)FT_Render_Mode_.FT_RENDER_MODE_LIGHT,
+            FreeTypeRenderMode.Mono => (int)FT_Render_Mode_.FT_RENDER_MODE_MONO,
+            FreeTypeRenderMode.LCD => (int)FT_Render_Mode_.FT_RENDER_MODE_LCD,
+            FreeTypeRenderMode.LCDV => (int)FT_Render_Mode_.FT_RENDER_MODE_LCD_V,
+            FreeTypeRenderMode.SDF => (int)FT_Render_Mode_.FT_RENDER_MODE_SDF,
+            _ => throw new InvalidOperationException($"Unsupported render mode: {RenderMode}"),
+        };
+
+        FT_Render_Glyph(slotPtr, renderMode);
 
         FT_Bitmap bitmap = ReadGlyphSlotBitmap(slotPtr);
 
@@ -316,10 +328,21 @@ internal sealed class FreeTypeFontSource : IFontSource
 
     private const int FT_LOAD_DEFAULT = 0x0;
     private const int FT_LOAD_COLOR = 0x20;
-    private const int FT_RENDER_MODE_NORMAL = 0;
+
     private const uint FT_KERNING_DEFAULT = 0;
     private const byte FT_PIXEL_MODE_MONO = 1;
     private const byte FT_PIXEL_MODE_GRAY = 2;
+
+    private enum FT_Render_Mode_ : int
+    {
+        FT_RENDER_MODE_NORMAL = 0,
+        FT_RENDER_MODE_LIGHT = 1,
+        FT_RENDER_MODE_MONO = 2,
+        FT_RENDER_MODE_LCD = 3,
+        FT_RENDER_MODE_LCD_V = 4,
+        FT_RENDER_MODE_SDF = 5,
+        FT_RENDER_MODE_MAX = 6
+    }
 
     #endregion
 

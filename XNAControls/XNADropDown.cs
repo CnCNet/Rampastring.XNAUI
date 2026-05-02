@@ -193,7 +193,7 @@ public class XNADropDown : XNAControl
 
     // Cache for the truncated display text produced by GetDisplayTextForSelectedItem.
     // That method is called every frame from DrawSelectedItem; without this cache it
-    // would re-run the per-character MeasureString truncation loop on each draw.
+    // would re-run the MeasureString truncation on each draw.
     private string cachedDisplayText = null;
     private int cachedSelectedIndex = -1;
     private int cachedWidth = 0;

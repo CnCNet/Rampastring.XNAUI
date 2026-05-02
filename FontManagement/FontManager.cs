@@ -307,6 +307,7 @@ public static class FontManager
     {
         IFontLoader fontLoader = config.FontLoader switch
         {
+            // Note: FontStashSharp automatically uses StbTrueType with parameters specified in FontSystemSettings, so we return null here to use the default loader.
             TTFFontLoader.StbTrueType => null,
             TTFFontLoader.FreeType => new FreeTypeFontLoader(FreeTypeRenderMode.Normal),
             TTFFontLoader.FreeTypeMono => new FreeTypeFontLoader(FreeTypeRenderMode.Mono),

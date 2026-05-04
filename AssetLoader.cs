@@ -218,7 +218,7 @@ public static class AssetLoader
             var colorData = new Color[rgbaImage.Width * rgbaImage.Height];
             int colorIndex = 0;
 
-            // Copy pixels directly into a Texture2D via SetData, premultiplying alpha during the copy.
+            // Optimize performance by copying pixels directly into a Texture2D via SetData and premultiplying alpha during the copy.
             rgbaImage.ProcessPixelRows(accessor =>
             {
                 for (int y = 0; y < accessor.Height; y++)

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Rampastring.Tools;
+using Rampastring.XNAUI.FontManagement;
 using System;
 
 namespace Rampastring.XNAUI.XNAControls;
@@ -187,7 +188,7 @@ public class XNACheckBox : XNAControl
         {
             Vector2 textDimensions = Renderer.GetTextDimensions(Text, FontIndex);
 
-            TextLocationY = (CheckedTexture.Height - (int)textDimensions.Y) / 2 - 1;
+            TextLocationY = (CheckedTexture.Height - FontManager.GetFontAscent(FontIndex)) / 2;
 
             Width = (int)textDimensions.X + TEXT_PADDING_DEFAULT + CheckedTexture.Width;
             Height = Math.Max((int)textDimensions.Y, CheckedTexture.Height);

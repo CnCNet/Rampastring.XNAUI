@@ -1,3 +1,4 @@
+using System;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -17,6 +18,21 @@ public class TTFFontWrapper : IFont
     {
         var bounds = _font.MeasureString(text);
         return new Vector2(bounds.X, bounds.Y);
+    }
+
+    /// <summary>
+    /// Returns the vertical centering offset for controls: use (controlHeight - GetAscent()) / 2
+    /// as the draw Y to visually centre capital letters in a fixed-height control.
+    ///
+    /// TextBounds("H") gives Bounds where Y = top of 'H' from draw origin (= ascent - capHeight)
+    /// and Y2 = bottom of 'H' from draw origin (= ascent). Drawing at (h - Y - Y2) / 2 places
+    /// the visual midpoint of cap letters at exactly h/2, independent of descenders or the gap
+    /// between ascent and cap height that TTF metrics include for accented capitals.
+    /// </summary>
+    public int GetAscent()
+    {
+        var b = _font.TextBounds("H", Vector2.Zero);
+        return (int)Math.Ceiling(b.Y + b.Y2);
     }
 
     public void DrawString(SpriteBatch spriteBatch, string text, Vector2 location, Color color, float scale, float depth)

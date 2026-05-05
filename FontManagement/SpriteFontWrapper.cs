@@ -16,6 +16,10 @@ public class SpriteFontWrapper : IFont
 
     public Vector2 MeasureString(string text) => _font.MeasureString(text);
 
+    // For XNA SpriteFonts MeasureString always returns LineSpacing as height, so this
+    // is equivalent to LineSpacing — preserving the existing centering behaviour.
+    public int GetAscent() => (int)_font.MeasureString("H").Y;
+
     public void DrawString(SpriteBatch spriteBatch, string text, Vector2 location, Color color, float scale, float depth) =>
         spriteBatch.DrawString(_font, text, location, color, 0f, Vector2.Zero, scale, SpriteEffects.None, depth);
 

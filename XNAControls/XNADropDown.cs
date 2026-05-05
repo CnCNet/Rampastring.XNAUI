@@ -538,8 +538,9 @@ public class XNADropDown : XNAControl
 
             if (item.Text != null)
             {
+                int textY = dropDownRect.Y + (dropDownRect.Height - FontManager.GetFontAscent(FontIndex)) / 2;
                 DrawStringWithShadow(item.Text, FontIndex,
-                    new Vector2(textX, dropDownRect.Y + 2), GetItemTextColor(item));
+                    new Vector2(textX, textY), GetItemTextColor(item));
             }
         }
 
@@ -611,6 +612,9 @@ public class XNADropDown : XNAControl
             textColor = DisabledItemColor;
 
         if (item.Text != null)
-            DrawStringWithShadow(item.Text, FontIndex, new Vector2(textX, y + 1), textColor);
+        {
+            int textY = y + (ItemHeight - FontManager.GetFontAscent(FontIndex)) / 2;
+            DrawStringWithShadow(item.Text, FontIndex, new Vector2(textX, textY), textColor);
+        }
     }
 }

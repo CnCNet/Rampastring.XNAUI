@@ -465,11 +465,13 @@ public class XNAContextMenu : XNAControl
 
         Color textColor = item.Selectable ? GetItemTextColor(item) : DisabledItemColor;
 
-        DrawStringWithShadow(item.Text, FontIndex, new Vector2(textX, point.Y + TextVerticalPadding), textColor);
+        int textY = point.Y + (itemHeight - FontManager.GetFontAscent(FontIndex)) / 2;
+        DrawStringWithShadow(item.Text, FontIndex, new Vector2(textX, textY), textColor);
         if (item.HintText != null)
         {
             int hintTextX = Width - TextHorizontalPadding - (int)Renderer.GetTextDimensions(item.HintText, HintFontIndex).X;
-            DrawStringWithShadow(item.HintText, HintFontIndex, new Vector2(hintTextX, point.Y + TextVerticalPadding), textColor);
+            int hintTextY = point.Y + (itemHeight - FontManager.GetFontAscent(HintFontIndex)) / 2;
+            DrawStringWithShadow(item.HintText, HintFontIndex, new Vector2(hintTextX, hintTextY), textColor);
         }
 
         return itemHeight;

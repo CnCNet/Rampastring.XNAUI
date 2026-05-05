@@ -606,36 +606,50 @@ public class XNADropDown : XNAControl
         {
             int availableWidth = Width - textX - DropDownTexture.Width - 2;
 
-            Vector2 textSize = Renderer.MeasureString(item.Text, FontIndex);
-
-            if (textSize.X > availableWidth)
+            if (availableWidth <= 0)
             {
-                const string ellipsis = "...";
-                float ellipsisWidth = Renderer.MeasureString(ellipsis, FontIndex).X;
-                float maxWidth = availableWidth - ellipsisWidth;
+                displayText = string.Empty;
+            }
+            else
+            {
+                Vector2 textSize = Renderer.MeasureString(item.Text, FontIndex);
 
-                int bestFit = 0;
-                int low = 0;
-                int high = item.Text.Length;
-
-                while (low <= high)
+                if (textSize.X > availableWidth)
                 {
-                    int mid = low + ((high - low) / 2);
-                    string test = item.Text.Substring(0, mid);
-                    float currentWidth = Renderer.MeasureString(test, FontIndex).X;
+                    const string ellipsis = "...";
+                    float ellipsisWidth = Renderer.MeasureString(ellipsis, FontIndex).X;
+                    float maxWidth = availableWidth - ellipsisWidth;
 
-                    if (currentWidth <= maxWidth)
+                    if (maxWidth <= 0)
                     {
-                        bestFit = mid;
-                        low = mid + 1;
+                        displayText = string.Empty;
                     }
                     else
                     {
-                        high = mid - 1;
+                        int bestFit = 0;
+                        int low = 0;
+                        int high = item.Text.Length;
+
+                        while (low <= high)
+                        {
+                            int mid = low + ((high - low) / 2);
+                            string test = item.Text.Substring(0, mid);
+                            float currentWidth = Renderer.MeasureString(test, FontIndex).X;
+
+                            if (currentWidth <= maxWidth)
+                            {
+                                bestFit = mid;
+                                low = mid + 1;
+                            }
+                            else
+                            {
+                                high = mid - 1;
+                            }
+                        }
+
+                        displayText = item.Text.Substring(0, bestFit) + ellipsis;
                     }
                 }
-
-                displayText = item.Text.Substring(0, bestFit) + ellipsis;
             }
         }
 

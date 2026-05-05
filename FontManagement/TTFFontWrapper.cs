@@ -15,6 +15,9 @@ public class TTFFontWrapper : IFont
     {
         _font = font;
         var bounds = _font.TextBounds(CapHeightReferenceGlyph, Vector2.Zero);
+        // FontStashSharp bounds are (minX, minY, maxX, maxY). We use Y + Y2 here because
+        // controls position text with (controlHeight - ascent) / 2, and this term preserves the
+        // glyph's top offset from the draw origin. If we mistakenly used Y2 - Y, it would only be box height and would mis-center text when Y != 0.
         _ascent = (int)Math.Ceiling(bounds.Y + bounds.Y2);
     }
 

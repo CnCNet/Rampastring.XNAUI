@@ -208,6 +208,8 @@ public class XNADropDown : XNAControl
         else if (closedWidth > 0 && Width != closedWidth)
         {
             Width = closedWidth;
+            closedWidth = 0;
+            expandedListWidth = 0;
         }
     }
 
@@ -416,6 +418,8 @@ public class XNADropDown : XNAControl
                 expandedListWidth = itemWidth;
         }
 
+        SyncWidthToDropDownState();
+
         if (!OpenUp)
         {
             DropDownState = DropDownState.OPENED_DOWN;
@@ -471,6 +475,7 @@ public class XNADropDown : XNAControl
 
         Height = DropDownTexture.Height;
         DropDownState = DropDownState.CLOSED;
+        SyncWidthToDropDownState();
         Attach();
     }
 

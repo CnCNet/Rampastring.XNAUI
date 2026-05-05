@@ -205,9 +205,10 @@ public class XNADropDown : XNAControl
             if (Width != openWidth)
                 Width = openWidth;
         }
-        else if (closedWidth > 0 && Width != closedWidth)
+        else
         {
-            Width = closedWidth;
+            if (closedWidth > 0 && Width != closedWidth)
+                Width = closedWidth;
             closedWidth = 0;
             expandedListWidth = 0;
         }
@@ -418,8 +419,6 @@ public class XNADropDown : XNAControl
                 expandedListWidth = itemWidth;
         }
 
-        SyncWidthToDropDownState();
-
         if (!OpenUp)
         {
             DropDownState = DropDownState.OPENED_DOWN;
@@ -433,6 +432,8 @@ public class XNADropDown : XNAControl
             Y -= 1 + ItemHeight * Math.Min(numFittingItems, Items.Count);
             Height = DropDownTexture.Height + 1 + ItemHeight * Math.Min(numFittingItems, Items.Count);
         }
+
+        SyncWidthToDropDownState();
     }
 
     public override void OnLeftClick(InputEventArgs inputEventArgs)

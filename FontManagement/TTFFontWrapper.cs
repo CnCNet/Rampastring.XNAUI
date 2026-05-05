@@ -7,11 +7,15 @@ namespace Rampastring.XNAUI.FontManagement;
 
 public class TTFFontWrapper : IFont
 {
+    private const string CapHeightReferenceGlyph = "H";
     internal readonly SpriteFontBase _font;
+    private readonly int _ascent;
 
     public TTFFontWrapper(SpriteFontBase font)
     {
         _font = font;
+        var bounds = _font.TextBounds(CapHeightReferenceGlyph, Vector2.Zero);
+        _ascent = (int)Math.Ceiling(bounds.Y + bounds.Y2);
     }
 
     public Vector2 MeasureString(string text)
@@ -21,19 +25,11 @@ public class TTFFontWrapper : IFont
     }
 
     /// <summary>
-    /// Returns the vertical centering offset for controls: use (controlHeight - GetAscent()) / 2
-    /// as the draw Y to visually centre capital letters in a fixed-height control.
-    ///
-    /// TextBounds("H") gives Bounds where Y = top of 'H' from draw origin (= ascent - capHeight)
-    /// and Y2 = bottom of 'H' from draw origin (= ascent). Drawing at (h - Y - Y2) / 2 places
-    /// the visual midpoint of cap letters at exactly h/2, independent of descenders or the gap
-    /// between ascent and cap height that TTF metrics include for accented capitals.
+    /// Returns a stable height used for vertically centering text in fixed-height controls.
+    /// The cached value is derived from the bounds of the capital 'H', used here as a
+    /// reference cap-height glyph so descenders do not shift the baseline between strings.
     /// </summary>
-    public int GetAscent()
-    {
-        var b = _font.TextBounds("H", Vector2.Zero);
-        return (int)Math.Ceiling(b.Y + b.Y2);
-    }
+    public int GetAscent() => _ascent;
 
     public void DrawString(SpriteBatch spriteBatch, string text, Vector2 location, Color color, float scale, float depth)
     {

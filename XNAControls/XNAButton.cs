@@ -180,7 +180,7 @@ public class XNAButton : XNAControl
             TextXPosition = (int)((textSize.X - Width) / -2);
         }
 
-        TextYPosition = (Height - FontManager.GetFontAscent(FontIndex)) / 2;
+        TextYPosition = (Height - FontManager.GetFontVisualHeight(FontIndex)) / 2;
     }
 
     protected override void ParseControlINIAttribute(IniFile iniFile, string key, string value)

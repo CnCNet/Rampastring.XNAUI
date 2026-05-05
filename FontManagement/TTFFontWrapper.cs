@@ -9,13 +9,13 @@ public class TTFFontWrapper : IFont
 {
     private const string CapHeightReferenceGlyph = "H";
     internal readonly SpriteFontBase _font;
-    private readonly int _ascent;
+    private readonly int _visualHeight;
 
     public TTFFontWrapper(SpriteFontBase font)
     {
         _font = font;
         var bounds = _font.TextBounds(CapHeightReferenceGlyph, Vector2.Zero);
-        _ascent = (int)Math.Ceiling(bounds.Y + bounds.Y2);
+        _visualHeight = (int)Math.Ceiling(bounds.Y + bounds.Y2);
     }
 
     public Vector2 MeasureString(string text)
@@ -29,7 +29,7 @@ public class TTFFontWrapper : IFont
     /// The cached value is derived from the bounds of the capital 'H', used here as a
     /// reference cap-height glyph so descenders do not shift the baseline between strings.
     /// </summary>
-    public int GetAscent() => _ascent;
+    public int GetVisualHeight() => _visualHeight;
 
     public void DrawString(SpriteBatch spriteBatch, string text, Vector2 location, Color color, float scale, float depth)
     {

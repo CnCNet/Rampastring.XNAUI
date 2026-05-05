@@ -8,19 +8,19 @@ namespace Rampastring.XNAUI.FontManagement;
 public class SpriteFontWrapper : IFont
 {
     internal readonly SpriteFont _font;
-    private readonly int _ascent;
+    private readonly int _visualHeight;
 
     public SpriteFontWrapper(SpriteFont font)
     {
         _font = font;
-        _ascent = _font.LineSpacing;
+        _visualHeight = _font.LineSpacing;
     }
 
     public Vector2 MeasureString(string text) => _font.MeasureString(text);
 
     // For XNA SpriteFonts, measured text height matches LineSpacing, so using the
     // cached line spacing preserves the previous centering behavior without measuring per draw.
-    public int GetAscent() => _ascent;
+    public int GetVisualHeight() => _visualHeight;
 
     public void DrawString(SpriteBatch spriteBatch, string text, Vector2 location, Color color, float scale, float depth) =>
         spriteBatch.DrawString(_font, text, location, color, 0f, Vector2.Zero, scale, SpriteEffects.None, depth);

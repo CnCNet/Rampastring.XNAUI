@@ -898,13 +898,15 @@ public class WindowManager : DrawableGameComponent
     public override void Draw(GameTime gameTime)
     {
 #if XNA
-        // FSS.XNA 1.5.5 Texture2DManager.SetTextureData saves all 16 device.Textures slots and
+        // This is a workaround. Should fix this in FontStashSharp.XNA.
+        // In FontStashSharp.XNA 1.5.5, Texture2DManager.SetTextureData saves all 16 device. Textures slots and
         // restores them after uploading glyph data. If the previous frame's blit left renderTarget
         // bound in a slot, restoring it while renderTarget is the active render target throws
         // InvalidOperationException. Clear all slots first to prevent that.
         for (int i = 0; i < 16; i++)
             GraphicsDevice.Textures[i] = null;
 #endif
+
         GraphicsDevice.SetRenderTarget(renderTarget);
 
         GraphicsDevice.Clear(Color.Black);

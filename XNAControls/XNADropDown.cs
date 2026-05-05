@@ -185,11 +185,44 @@ public class XNADropDown : XNAControl
     private int expandedListWidth = 0;
 
     /// <summary>
+    /// Stores the control width used when the dropdown is closed so it can be restored
+    /// after the expanded list has temporarily widened the control.
+    /// </summary>
+    private int closedWidth = 0;
+
+    /// <summary>
+    /// Ensures the framework-visible control width matches the actual visible dropdown
+    /// width while the list is open, and restores the original width when the list closes.
+    /// </summary>
+    private void SyncWidthToDropDownState()
+    {
+        if (DropDownState != DropDownState.CLOSED)
+        {
+            if (closedWidth == 0)
+                closedWidth = Width;
+
+            int openWidth = Math.Max(closedWidth, expandedListWidth);
+            if (Width != openWidth)
+                Width = openWidth;
+        }
+        else if (closedWidth > 0 && Width != closedWidth)
+        {
+            Width = closedWidth;
+        }
+    }
+
+    /// <summary>
     /// Current visible width of the control, accounting for whether the dropdown list
     /// is open and may be wider than the closed-state <see cref="XNAControl.Width"/>.
     /// </summary>
-    private int CurrentDisplayWidth =>
-        DropDownState != DropDownState.CLOSED ? Math.Max(Width, expandedListWidth) : Width;
+    private int CurrentDisplayWidth
+    {
+        get
+        {
+            SyncWidthToDropDownState();
+            return Width;
+        }
+    }
 
     // Cache for the truncated display text produced by GetDisplayTextForSelectedItem.
     // That method is called every frame from DrawSelectedItem; without this cache it

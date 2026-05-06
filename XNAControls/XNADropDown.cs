@@ -186,9 +186,11 @@ public class XNADropDown : XNAControl
 
     /// <summary>
     /// Stores the control width used when the dropdown is closed so it can be restored
-    /// after the expanded list has temporarily widened the control.
+    /// after the expanded list has temporarily widened the control. Null when no closed
+    /// width has been captured yet, so a legitimate <see cref="XNAControl.Width"/> of 0
+    /// is preserved instead of being treated as "not captured".
     /// </summary>
-    private int closedWidth = 0;
+    private int? closedWidth = null;
 
     /// <summary>
     /// Ensures the framework-visible control width matches the actual visible dropdown
@@ -198,18 +200,18 @@ public class XNADropDown : XNAControl
     {
         if (DropDownState != DropDownState.CLOSED)
         {
-            if (closedWidth == 0)
+            if (closedWidth == null)
                 closedWidth = Width;
 
-            int openWidth = Math.Max(closedWidth, expandedListWidth);
+            int openWidth = Math.Max(closedWidth.Value, expandedListWidth);
             if (Width != openWidth)
                 Width = openWidth;
         }
         else
         {
-            if (closedWidth > 0 && Width != closedWidth)
-                Width = closedWidth;
-            closedWidth = 0;
+            if (closedWidth != null && Width != closedWidth.Value)
+                Width = closedWidth.Value;
+            closedWidth = null;
             expandedListWidth = 0;
         }
     }

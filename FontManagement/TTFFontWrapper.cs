@@ -25,12 +25,9 @@ public class TTFFontWrapper : IFont
     }
 
     /// <summary>
-    /// Returns a stable vertical alignment offset used for centering text in fixed-height controls.
-    /// This cached value is derived from the bounds of the capital 'H' reference glyph and is
-    /// computed from <c>bounds.Y + bounds.Y2</c>. It is intended for baseline/visual centering
-    /// calculations so descenders do not shift the text position between strings.
-    /// This is not the glyph height or line height in pixels, and it may be negative depending
-    /// on the font metrics.
+    /// Returns a stable offset used for vertically centering text in fixed-height controls.
+    /// The cached value is derived from the bounds of the capital 'H', used here as a
+    /// reference cap-height glyph so descenders do not shift the baseline between strings.
     /// </summary>
     public int GetVerticalOffset() => _verticalOffset;
 

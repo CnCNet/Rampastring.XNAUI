@@ -9,13 +9,13 @@ public class TTFFontWrapper : IFont
 {
     private const string CapHeightReferenceGlyph = "H";
     internal readonly SpriteFontBase _font;
-    private readonly int _visualHeight;
+    private readonly int _verticalCenteringValue;
 
     public TTFFontWrapper(SpriteFontBase font)
     {
         _font = font;
         var bounds = _font.TextBounds(CapHeightReferenceGlyph, Vector2.Zero);
-        _visualHeight = (int)Math.Ceiling(bounds.Y + bounds.Y2);
+        _verticalCenteringValue = (int)Math.Ceiling(bounds.Y + bounds.Y2);
     }
 
     public Vector2 MeasureString(string text)
@@ -25,11 +25,13 @@ public class TTFFontWrapper : IFont
     }
 
     /// <summary>
-    /// Returns a stable height used for vertically centering text in fixed-height controls.
-    /// The cached value is derived from the bounds of the capital 'H', used here as a
-    /// reference cap-height glyph so descenders do not shift the baseline between strings.
+    /// Returns the value <c>V</c> to plug into <c>(controlHeight - V) / 2</c> for
+    /// vertical centering. NOT a geometric height: this is <c>top + bottom</c> of the
+    /// cap glyph 'H' from the draw origin (i.e. <c>minY + maxY</c> from FontStashSharp's
+    /// <c>TextBounds</c>), chosen so the cap-glyph midpoint lands at <c>controlHeight / 2</c>
+    /// independent of descenders. The geometric glyph height would be <c>maxY - minY</c>.
     /// </summary>
-    public int GetVisualHeight() => _visualHeight;
+    public int GetVerticalCenteringValue() => _verticalCenteringValue;
 
     public void DrawString(SpriteBatch spriteBatch, string text, Vector2 location, Color color, float scale, float depth)
     {

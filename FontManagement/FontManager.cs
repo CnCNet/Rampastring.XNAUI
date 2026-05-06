@@ -518,21 +518,9 @@ public static class FontManager
     }
 
     /// <summary>
-    /// Returns a consistent height value between a mid line and a baseline, used for vertical centering
+    /// Returns a consistent height value used for vertical centering
     /// that does not vary based on whether the text being drawn has descenders.
     /// </summary>
-    /*
-        (Top line)      ------------------------------------------------------
-                              H       H
-                              H       H
-        (Mid line) ---------- H H H H H ---------- y       y ------------
-                              H       H            y       y
-                              H       H             y     y
-        (Baseline) ---------- H ----- H ------------- y y --------------
-                                                       y
-                                                    y y
-        (Bottom line)   ------------------------------------------------------
-    */
     public static int GetFontVisualHeight(int fontIndex)
     {
         if (fontIndex < 0 || fontIndex >= fonts.Count)

@@ -521,12 +521,12 @@ public static class FontManager
     /// Returns a consistent height value used for vertical centering
     /// that does not vary based on whether the text being drawn has descenders.
     /// </summary>
-    public static int GetFontVisualHeight(int fontIndex)
+    public static int GetFontVerticalOffset(int fontIndex)
     {
         if (fontIndex < 0 || fontIndex >= fonts.Count)
             throw new IndexOutOfRangeException($"Invalid font index. {fonts.Count} fonts loaded, requested index: {fontIndex}");
 
-        return fonts[fontIndex].GetVisualHeight();
+        return fonts[fontIndex].GetVerticalOffset();
     }
 
     public static void DrawString(SpriteBatch spriteBatch, string text, int fontIndex, Vector2 location, Color color, float scale = 1.0f, float depth = 0f)

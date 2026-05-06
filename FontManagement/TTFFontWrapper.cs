@@ -9,13 +9,13 @@ public class TTFFontWrapper : IFont
 {
     private const string CapHeightReferenceGlyph = "H";
     internal readonly SpriteFontBase _font;
-    private readonly int _visualHeight;
+    private readonly int _verticalOffset;
 
     public TTFFontWrapper(SpriteFontBase font)
     {
         _font = font;
         var bounds = _font.TextBounds(CapHeightReferenceGlyph, Vector2.Zero);
-        _visualHeight = (int)Math.Ceiling(bounds.Y + bounds.Y2);
+        _verticalOffset = (int)Math.Ceiling(bounds.Y + bounds.Y2);
     }
 
     public Vector2 MeasureString(string text)
@@ -25,11 +25,11 @@ public class TTFFontWrapper : IFont
     }
 
     /// <summary>
-    /// Returns a stable height used for vertically centering text in fixed-height controls.
+    /// Returns a stable offset used for vertically centering text in fixed-height controls.
     /// The cached value is derived from the bounds of the capital 'H', used here as a
     /// reference cap-height glyph so descenders do not shift the baseline between strings.
     /// </summary>
-    public int GetVisualHeight() => _visualHeight;
+    public int GetVerticalOffset() => _verticalOffset;
 
     public void DrawString(SpriteBatch spriteBatch, string text, Vector2 location, Color color, float scale, float depth)
     {

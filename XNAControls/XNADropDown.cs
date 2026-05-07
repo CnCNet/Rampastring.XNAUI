@@ -415,7 +415,7 @@ public class XNADropDown : XNAControl
             if (item.Texture != null)
                 itemWidth += item.Texture.Width + 1;
             if (item.Text != null)
-                itemWidth += (int)Renderer.MeasureString(item.Text, FontIndex).X;
+                itemWidth += (int)Math.Ceiling(Renderer.MeasureString(item.Text, FontIndex).X);
 
             if (itemWidth > expandedListWidth)
                 expandedListWidth = itemWidth;

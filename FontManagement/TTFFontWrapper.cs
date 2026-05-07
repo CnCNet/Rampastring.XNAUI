@@ -21,8 +21,7 @@ public class TTFFontWrapper : IFont
 
     public Vector2 MeasureString(string text)
     {
-        string safe = SanitizeStringForRendering(text);
-        var bounds = _font.MeasureString(safe);
+        var bounds = _font.MeasureString(SanitizeStringForRendering(text));
         return new Vector2(bounds.X, bounds.Y);
     }
 
@@ -39,10 +38,12 @@ public class TTFFontWrapper : IFont
     {
         var vectorScale = new Vector2(scale, scale);
 
-        // Normalize newlines and sanitize invalid surrogate pairs
-        string normalized = text.Replace("\r\n", "\n").Replace('\r', '\n');
-        string safe = SanitizeStringForRendering(normalized);
-        var segment = new StringSegment(safe);
+        // Some fonts render '\r' as a visible glyph (e.g. Unifont),
+        // so normalize all newlines to '\n'. We also sanitize invalid
+        // UTF-16 surrogate pairs so FontStashSharp's UTF-16 -> UTF-32
+        // conversion cannot throw.
+        text = text.Replace("\r\n", "\n").Replace('\r', '\n');
+        var segment = new StringSegment(SanitizeStringForRendering(text));
 
         spriteBatch.DrawString(_font, segment, location, color, 0f, Vector2.Zero, vectorScale, depth);
     }
@@ -55,31 +56,60 @@ public class TTFFontWrapper : IFont
     public bool HasCharacter(char c) => true;
 
     /// <summary>
-    /// Returns a sanitized string safe for rendering (fixes unpaired surrogates).
+    /// Returns a sanitized string safe for rendering (replaces unpaired surrogates
+    /// with U+FFFD so FontStashSharp's UTF-16 -> UTF-32 conversion does not throw).
     /// </summary>
     public string GetSafeString(string str) => SanitizeStringForRendering(str);
 
-    private static string SanitizeStringForRendering(string? s)
+    /// <summary>
+    /// Replaces unpaired UTF-16 surrogates with U+FFFD. Returns the original
+    /// string reference unchanged when the input is already valid (the common case),
+    /// to avoid allocations on the rendering hot path.
+    /// </summary>
+    private static string SanitizeStringForRendering(string str)
     {
-        if (string.IsNullOrEmpty(s))
-            return string.Empty;
+        if (string.IsNullOrEmpty(str))
+            return str ?? string.Empty;
 
-        // Build a string that contains only valid UTF-16 sequences:
-        // - valid surrogate pair => keep both
-        // - isolated high or low surrogate => replace with U+FFFD
-        var sb = new StringBuilder(s.Length);
-
-        for (int i = 0; i < s.Length; i++)
+        int firstBad = -1;
+        for (int i = 0; i < str.Length; i++)
         {
-            char c = s[i];
+            char c = str[i];
+            if (char.IsHighSurrogate(c))
+            {
+                if (i + 1 < str.Length && char.IsLowSurrogate(str[i + 1]))
+                {
+                    i++;
+                    continue;
+                }
+                firstBad = i;
+                break;
+            }
+            if (char.IsLowSurrogate(c))
+            {
+                firstBad = i;
+                break;
+            }
+        }
+
+        if (firstBad < 0)
+            return str;
+
+        var sb = new StringBuilder(str.Length);
+        if (firstBad > 0)
+            sb.Append(str, 0, firstBad);
+
+        for (int i = firstBad; i < str.Length; i++)
+        {
+            char c = str[i];
 
             if (char.IsHighSurrogate(c))
             {
-                if (i + 1 < s.Length && char.IsLowSurrogate(s[i + 1]))
+                if (i + 1 < str.Length && char.IsLowSurrogate(str[i + 1]))
                 {
                     sb.Append(c);
-                    sb.Append(s[i + 1]);
-                    i++; // skip low surrogate
+                    sb.Append(str[i + 1]);
+                    i++;
                 }
                 else
                 {
@@ -88,7 +118,6 @@ public class TTFFontWrapper : IFont
             }
             else if (char.IsLowSurrogate(c))
             {
-                // Unpaired low surrogate
                 sb.Append('\uFFFD');
             }
             else

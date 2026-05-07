@@ -2,6 +2,7 @@ using System;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Text;
 
 namespace Rampastring.XNAUI.FontManagement;
 
@@ -20,7 +21,8 @@ public class TTFFontWrapper : IFont
 
     public Vector2 MeasureString(string text)
     {
-        var bounds = _font.MeasureString(text);
+        string safe = SanitizeStringForRendering(text);
+        var bounds = _font.MeasureString(safe);
         return new Vector2(bounds.X, bounds.Y);
     }
 
@@ -37,9 +39,10 @@ public class TTFFontWrapper : IFont
     {
         var vectorScale = new Vector2(scale, scale);
 
-        // Some fonts render `\r` as a visible character, e.g., Unifont. Therefore, we normalize newlines.
-        text = text.Replace("\r\n", "\n").Replace('\r', '\n');
-        var segment = new StringSegment(text);
+        // Normalize newlines and sanitize invalid surrogate pairs
+        string normalized = text.Replace("\r\n", "\n").Replace('\r', '\n');
+        string safe = SanitizeStringForRendering(normalized);
+        var segment = new StringSegment(safe);
 
         spriteBatch.DrawString(_font, segment, location, color, 0f, Vector2.Zero, vectorScale, depth);
     }
@@ -52,8 +55,48 @@ public class TTFFontWrapper : IFont
     public bool HasCharacter(char c) => true;
 
     /// <summary>
-    /// Returns the string as-is for TTF fonts.
-    /// TTF fonts handle all characters through dynamic glyph generation and fallback.
+    /// Returns a sanitized string safe for rendering (fixes unpaired surrogates).
     /// </summary>
-    public string GetSafeString(string str) => str;
+    public string GetSafeString(string str) => SanitizeStringForRendering(str);
+
+    private static string SanitizeStringForRendering(string? s)
+    {
+        if (string.IsNullOrEmpty(s))
+            return string.Empty;
+
+        // Build a string that contains only valid UTF-16 sequences:
+        // - valid surrogate pair => keep both
+        // - isolated high or low surrogate => replace with U+FFFD
+        var sb = new StringBuilder(s.Length);
+
+        for (int i = 0; i < s.Length; i++)
+        {
+            char c = s[i];
+
+            if (char.IsHighSurrogate(c))
+            {
+                if (i + 1 < s.Length && char.IsLowSurrogate(s[i + 1]))
+                {
+                    sb.Append(c);
+                    sb.Append(s[i + 1]);
+                    i++; // skip low surrogate
+                }
+                else
+                {
+                    sb.Append('\uFFFD');
+                }
+            }
+            else if (char.IsLowSurrogate(c))
+            {
+                // Unpaired low surrogate
+                sb.Append('\uFFFD');
+            }
+            else
+            {
+                sb.Append(c);
+            }
+        }
+
+        return sb.ToString();
+    }
 }

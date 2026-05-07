@@ -104,13 +104,11 @@
   
   <!--Switching between Configurations within VS IDE requires reloading the project file-->
   <ItemGroup Condition="$(DefineConstants.Contains('DX'))">
-    <PackageReference Include="MonoGame.Framework.WindowsDX" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" Version="3.8.0.1641" />
-    <PackageReference Include="MonoGame.Framework.WindowsDX" Condition="'$(TargetFrameworkIdentifier)' != '.NETFramework'" Version="3.8.1.303" />
+    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.0.1641" />
   </ItemGroup>
   
   <ItemGroup Condition="$(DefineConstants.Contains('GL'))">
-    <PackageReference Include="MonoGame.Framework.DesktopGL" GeneratePathProperty="true" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" Version="3.8.0.1641" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL" GeneratePathProperty="true" Condition="'$(TargetFrameworkIdentifier)' != '.NETFramework'" Version="3.8.1.303" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" GeneratePathProperty="true" Version="3.8.0.1641" />
   </ItemGroup>
   
   <ItemGroup Condition="$(DefineConstants.Contains('XNA'))">
@@ -194,6 +192,11 @@
 
   <ItemGroup Condition="$(DefineConstants.Contains('XNA'))">
     <PackageReference Include="FontStashSharp.XNA" Version="1.5.5" />
+  </ItemGroup>
+
+  <ItemGroup Condition="!$(DefineConstants.Contains('XNA'))">
+    <PackageReference Include="CnCNet.Forme.NET48" Version="0.0.3.1" />
+    <PackageReference Include="CnCNet.Forme.MonoGame.NET48" Version="0.0.3.1" />
   </ItemGroup>
 
 </Project>

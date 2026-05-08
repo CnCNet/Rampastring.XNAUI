@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Rampastring.XNAUI.Extensions;
 using Rampastring.XNAUI.FontManagement;
 
 namespace Rampastring.XNAUI;
@@ -72,26 +73,25 @@ public class TextParseReturnValue
                         int start = 0;
                         while (start < word.Length)
                         {
-                            int remaining = word.Length - start;
-                            int low = 0, high = remaining;
+                            string suffix = word.Substring(start);
+                            int low = 0, high = suffix.Length;
                             while (low < high)
                             {
                                 int mid = (low + high + 1) / 2;
-                                if (font.MeasureString(word.Substring(start, mid)).X <= width)
+                                if (font.MeasureString(suffix.SubstringSurrogateAware(mid)).X <= width)
                                     low = mid;
                                 else
                                     high = mid - 1;
                             }
-                            if (low >= remaining)
+                            if (low >= suffix.Length)
                                 break;
-                            // Snap to code point boundary to avoid splitting a surrogate pair.
-                            // If no code point fits, force one through to avoid an infinite loop.
-                            if (low > 0 && char.IsHighSurrogate(word[start + low - 1]))
-                                low--;
-                            if (low == 0)
-                                low = char.IsSurrogatePair(word, start) ? 2 : 1;
-                            returnValue.Add(word.Substring(start, low));
-                            start += low;
+                            // SubstringSurrogateAware snaps down to avoid splitting a surrogate pair.
+                            // If no code point fits at all, force one through to avoid an infinite loop.
+                            string chunk = suffix.SubstringSurrogateAware(low);
+                            if (chunk.Length == 0)
+                                chunk = suffix.SubstringSurrogateAware(char.IsSurrogatePair(suffix, 0) ? 2 : 1);
+                            returnValue.Add(chunk);
+                            start += chunk.Length;
                         }
 
                         line = word.Substring(start) + " ";

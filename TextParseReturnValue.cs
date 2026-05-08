@@ -72,15 +72,18 @@ public class TextParseReturnValue
                     {
                         var sb = new StringBuilder();
 
-                        for (int i = 0; i < word.Length; i++) // TODO: surrogate - iterating by char index may split a surrogate pair when measuring or splitting
+                        for (int i = 0; i < word.Length; )
                         {
-                            if (font.MeasureString(sb.ToString() + word[i]).X > width)
+                            int step = char.IsSurrogatePair(word, i) ? 2 : 1;
+                            string unit = word.Substring(i, step);
+                            if (font.MeasureString(sb.ToString() + unit).X > width)
                             {
                                 returnValue.Add(sb.ToString());
                                 sb.Clear();
                             }
 
-                            sb.Append(word[i]);
+                            sb.Append(unit);
+                            i += step;
                         }
 
                         if (sb.Length > 0)

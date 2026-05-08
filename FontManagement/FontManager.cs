@@ -496,13 +496,13 @@ public static class FontManager
         while (low < high)
         {
             int mid = (low + high + 1) / 2; // Round up to avoid infinite loop when low + 1 == high
-            if (font.MeasureString(str.Substring(0, mid)).X <= maxWidth) // TODO: surrogate - mid is a raw char index and may split a surrogate pair, producing an incorrect measurement
+            if (font.MeasureString(str.TruncateAtCharBoundary(mid)).X <= maxWidth)
                 low = mid;
             else
                 high = mid - 1;
         }
 
-        return str.Substring(0, low); // TODO: surrogate - low is a raw char index and may split a surrogate pair
+        return str.TruncateAtCharBoundary(low);
     }
 
     public static TextParseReturnValue FixText(string text, int fontIndex, int width)

@@ -642,7 +642,7 @@ public class XNADropDown : XNAControl
                         while (low <= high)
                         {
                             int mid = low + ((high - low) / 2);
-                            string test = item.Text.Substring(0, mid);
+                            string test = item.Text.Substring(0, mid); // TODO: surrogate - mid is a raw char index and may split a surrogate pair, producing an incorrect measurement
                             float currentWidth = Renderer.MeasureString(test, FontIndex).X;
 
                             if (currentWidth <= maxWidth)
@@ -656,7 +656,7 @@ public class XNADropDown : XNAControl
                             }
                         }
 
-                        displayText = item.Text.Substring(0, bestFit) + ellipsis;
+                        displayText = item.Text.Substring(0, bestFit) + ellipsis; // TODO: surrogate - bestFit is a raw char index and may split a surrogate pair
                     }
                 }
             }

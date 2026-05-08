@@ -149,7 +149,7 @@ public class XNATextBox : XNAControl
             UnselectText();
 
             if (text.Length > MaximumTextLength)
-                text = text.Substring(0, MaximumTextLength);
+                text = text.Substring(0, MaximumTextLength); // TODO: surrogate - truncating by char count may split a surrogate pair
 
             TextEndPosition = text.Length;
 
@@ -727,7 +727,7 @@ public class XNATextBox : XNAControl
                 if (fullText.Length > MaximumTextLength)
                 {
                     int availableSpace = MaximumTextLength - (text.Length - (IsValidSelection() ? SelectionLength : 0));
-                    textToAdd = textToAdd.Substring(0, Math.Min(textToAdd.Length, Math.Max(0, availableSpace)));
+                    textToAdd = textToAdd.Substring(0, Math.Min(textToAdd.Length, Math.Max(0, availableSpace))); // TODO: surrogate - truncating by char count may split a surrogate pair
                 }
 
                 if (IsValidSelection())
@@ -1499,7 +1499,7 @@ public class XNATextBox : XNAControl
                     if (WindowManager.IMEHandler.GetDrawCompositionText(this, out string composition, out int compositionCursorPosition))
                     {
                         DrawString(composition, FontIndex, new(barLocationX, TEXT_VERTICAL_MARGIN), Color.Orange);
-                        Vector2 measStr = FontManager.GetTextDimensions(composition.Substring(0, compositionCursorPosition), FontIndex);
+                        Vector2 measStr = FontManager.GetTextDimensions(composition.Substring(0, compositionCursorPosition), FontIndex); // TODO: surrogate - compositionCursorPosition is a char index from IME and may split a surrogate pair
                         barLocationX += (int)measStr.X;
                     }
                 }

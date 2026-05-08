@@ -72,7 +72,7 @@ public class TextParseReturnValue
                     {
                         var sb = new StringBuilder();
 
-                        for (int i = 0; i < word.Length; i++)
+                        for (int i = 0; i < word.Length; i++) // TODO: surrogate - iterating by char index may split a surrogate pair when measuring or splitting
                         {
                             if (font.MeasureString(sb.ToString() + word[i]).X > width)
                             {

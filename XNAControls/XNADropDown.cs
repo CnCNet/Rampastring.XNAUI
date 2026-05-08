@@ -643,7 +643,7 @@ public class XNADropDown : XNAControl
                         while (low <= high)
                         {
                             int mid = low + ((high - low) / 2);
-                            string test = item.Text.TruncateAtCharBoundary(mid);
+                            string test = item.Text.SubstringSurrogateAware(mid);
                             float currentWidth = Renderer.MeasureString(test, FontIndex).X;
 
                             if (currentWidth <= maxWidth)
@@ -657,7 +657,7 @@ public class XNADropDown : XNAControl
                             }
                         }
 
-                        displayText = item.Text.TruncateAtCharBoundary(bestFit) + ellipsis;
+                        displayText = item.Text.SubstringSurrogateAware(bestFit) + ellipsis;
                     }
                 }
             }

@@ -96,6 +96,7 @@ public class TTFFontWrapper : IFont
             return str;
 
 #if DEBUG
+        System.Diagnostics.Debug.WriteLine($"There is still an unpaired surrogate at index {firstBad} in string \"{str}\". How could this happen?");
         System.Diagnostics.Debugger.Break();
 #endif
 

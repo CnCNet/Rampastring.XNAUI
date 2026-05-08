@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Rampastring.Tools;
+using Rampastring.XNAUI.Extensions;
 using Rampastring.XNAUI.FontManagement;
 using System;
 using System.Collections.Generic;
@@ -642,7 +643,7 @@ public class XNADropDown : XNAControl
                         while (low <= high)
                         {
                             int mid = low + ((high - low) / 2);
-                            string test = item.Text.Substring(0, mid);
+                            string test = item.Text.SubstringSurrogateAware(0, mid);
                             float currentWidth = Renderer.MeasureString(test, FontIndex).X;
 
                             if (currentWidth <= maxWidth)
@@ -656,7 +657,7 @@ public class XNADropDown : XNAControl
                             }
                         }
 
-                        displayText = item.Text.Substring(0, bestFit) + ellipsis;
+                        displayText = item.Text.SubstringSurrogateAware(0, bestFit) + ellipsis;
                     }
                 }
             }

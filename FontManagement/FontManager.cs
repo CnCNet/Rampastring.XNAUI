@@ -497,13 +497,13 @@ public static class FontManager
         while (low < high)
         {
             int mid = (low + high + 1) / 2; // Round up to avoid infinite loop when low + 1 == high
-            if (font.MeasureString(str.Substring(0, mid)).X <= maxWidth)
+            if (font.MeasureString(str.SubstringSurrogateAware(0, mid)).X <= maxWidth)
                 low = mid;
             else
                 high = mid - 1;
         }
 
-        return str.Substring(0, low);
+        return str.SubstringSurrogateAware(0, low);
     }
 
     public static TextParseReturnValue FixText(string text, int fontIndex, int width)

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Rampastring.Tools;
+using Rampastring.XNAUI.Extensions;
 using Rampastring.XNAUI.FontManagement;
 using Rampastring.XNAUI.Input;
 using System;
@@ -149,7 +150,7 @@ public class XNATextBox : XNAControl
             UnselectText();
 
             if (text.Length > MaximumTextLength)
-                text = text.Substring(0, MaximumTextLength);
+                text = text.SubstringSurrogateAware(0, MaximumTextLength);
 
             TextEndPosition = text.Length;
 
@@ -727,7 +728,7 @@ public class XNATextBox : XNAControl
                 if (fullText.Length > MaximumTextLength)
                 {
                     int availableSpace = MaximumTextLength - (text.Length - (IsValidSelection() ? SelectionLength : 0));
-                    textToAdd = textToAdd.Substring(0, Math.Min(textToAdd.Length, Math.Max(0, availableSpace)));
+                    textToAdd = textToAdd.SubstringSurrogateAware(0, Math.Min(textToAdd.Length, Math.Max(0, availableSpace)));
                 }
 
                 if (IsValidSelection())
@@ -1499,7 +1500,7 @@ public class XNATextBox : XNAControl
                     if (WindowManager.IMEHandler.GetDrawCompositionText(this, out string composition, out int compositionCursorPosition))
                     {
                         DrawString(composition, FontIndex, new(barLocationX, TEXT_VERTICAL_MARGIN), Color.Orange);
-                        Vector2 measStr = FontManager.GetTextDimensions(composition.Substring(0, compositionCursorPosition), FontIndex);
+                        Vector2 measStr = FontManager.GetTextDimensions(composition.SubstringSurrogateAware(0, compositionCursorPosition), FontIndex);
                         barLocationX += (int)measStr.X;
                     }
                 }

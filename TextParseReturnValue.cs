@@ -73,28 +73,26 @@ public class TextParseReturnValue
                         int start = 0;
                         while (start < word.Length)
                         {
-                            string suffix = word.Substring(start);
-                            int low = 0, high = suffix.Length;
+                            int remaining = word.Length - start;
+                            int low = 0, high = remaining;
                             while (low < high)
                             {
                                 int mid = (low + high + 1) / 2;
-                                if (font.MeasureString(suffix.SubstringSurrogateAware(mid)).X <= width)
+                                if (font.MeasureString(word.SubstringSurrogateAware(start, mid)).X <= width)
                                     low = mid;
                                 else
                                     high = mid - 1;
                             }
-                            if (low >= suffix.Length)
+                            if (low >= remaining)
                                 break;
-                            // SubstringSurrogateAware snaps down to avoid splitting a surrogate pair.
-                            // If no code point fits at all, force one through to avoid an infinite loop.
-                            string chunk = suffix.SubstringSurrogateAware(low);
+                            string chunk = word.SubstringSurrogateAware(start, low);
                             if (chunk.Length == 0)
-                                chunk = suffix.SubstringSurrogateAware(char.IsSurrogatePair(suffix, 0) ? 2 : 1);
+                                break;
                             returnValue.Add(chunk);
                             start += chunk.Length;
                         }
 
-                        line = word.Substring(start) + " ";
+                        line = word.SubstringSurrogateAware(start, word.Length - start) + " ";
                         continue;
                     }
 

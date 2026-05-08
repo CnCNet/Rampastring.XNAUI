@@ -95,6 +95,10 @@ public class TTFFontWrapper : IFont
         if (firstBad < 0)
             return str;
 
+#if DEBUG
+        System.Diagnostics.Debugger.Break();
+#endif
+
         var sb = new StringBuilder(str.Length);
         if (firstBad > 0)
             sb.Append(str, 0, firstBad);

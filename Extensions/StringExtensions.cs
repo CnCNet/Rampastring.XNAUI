@@ -1,3 +1,5 @@
+using System;
+
 namespace Rampastring.XNAUI.Extensions;
 
 /// <summary>
@@ -13,6 +15,10 @@ public static class StringExtensions
     /// <returns>The truncated string, or the original string if it is already short enough.</returns>
     public static string SubstringSurrogateAware(this string str, int maxLength)
     {
+        if (str == null)
+            throw new ArgumentNullException(nameof(str));
+        if (maxLength < 0)
+            throw new ArgumentOutOfRangeException(nameof(maxLength), "maxLength must be non-negative.");
         if (str.Length <= maxLength)
             return str;
         if (maxLength > 0 && char.IsHighSurrogate(str[maxLength - 1]))
@@ -30,6 +36,12 @@ public static class StringExtensions
     /// <returns>The safe substring.</returns>
     public static string SubstringSurrogateAware(this string str, int start, int maxLength)
     {
+        if (str == null)
+            throw new ArgumentNullException(nameof(str));
+        if (start < 0 || start > str.Length)
+            throw new ArgumentOutOfRangeException(nameof(start), "start must be within the bounds of the string.");
+        if (maxLength < 0)
+            throw new ArgumentOutOfRangeException(nameof(maxLength), "maxLength must be non-negative.");
         int available = str.Length - start;
         int length = maxLength < available ? maxLength : available;
         if (length > 0 && char.IsHighSurrogate(str[start + length - 1]))

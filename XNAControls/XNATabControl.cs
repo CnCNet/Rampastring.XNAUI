@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Rampastring.Tools;
+using Rampastring.XNAUI.FontManagement;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -103,7 +104,7 @@ public class XNATabControl : XNAControl
 
         Vector2 textSize = Renderer.GetTextDimensions(text, FontIndex);
         tab.TextXPosition = (defaultTexture.Width - (int)textSize.X) / 2;
-        tab.TextYPosition = (defaultTexture.Height - (int)textSize.Y) / 2;
+        tab.TextYPosition = (defaultTexture.Height - FontManager.GetFontVerticalCenteringValue(FontIndex)) / 2;
 
         Width += defaultTexture.Width;
         Height = defaultTexture.Height;

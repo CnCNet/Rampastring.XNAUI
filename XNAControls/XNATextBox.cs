@@ -19,6 +19,8 @@ public class XNATextBox : XNAControl
     protected const int SELECTION_MARGIN = 2;
     protected const int TEXT_HORIZONTAL_MARGIN = 3;
     protected const int TEXT_VERTICAL_MARGIN = 2;
+
+    protected int TextDrawY => Math.Max(TEXT_VERTICAL_MARGIN, (Height - FontManager.GetFontVerticalCenteringValue(FontIndex)) / 2);
     protected const double CURSOR_SCROLL_REPEAT_TIME = 0.05;
     protected const double CURSOR_FAST_SCROLL_THRESHOLD = 20;
     protected const double BAR_ON_TIME = 0.5;
@@ -1479,7 +1481,7 @@ public class XNATextBox : XNAControl
         if (safeStartPos < safeEndPos)
         {
             DrawStringWithShadow(Text.Substring(safeStartPos, safeEndPos - safeStartPos),
-                FontIndex, new Vector2(TEXT_HORIZONTAL_MARGIN, TEXT_VERTICAL_MARGIN), TextColor);
+                FontIndex, new Vector2(TEXT_HORIZONTAL_MARGIN, TextDrawY), TextColor);
         }
 
         if (WindowManager.SelectedControl == this && Enabled && WindowManager.HasFocus)
@@ -1499,7 +1501,7 @@ public class XNATextBox : XNAControl
                 {
                     if (WindowManager.IMEHandler.GetDrawCompositionText(this, out string composition, out int compositionCursorPosition))
                     {
-                        DrawString(composition, FontIndex, new(barLocationX, TEXT_VERTICAL_MARGIN), Color.Orange);
+                        DrawString(composition, FontIndex, new(barLocationX, TextDrawY), Color.Orange);
                         Vector2 measStr = FontManager.GetTextDimensions(composition.SubstringSurrogateAware(0, compositionCursorPosition), FontIndex);
                         barLocationX += (int)measStr.X;
                     }
@@ -1507,7 +1509,7 @@ public class XNATextBox : XNAControl
 
                 if (barTimer.TotalSeconds < BAR_ON_TIME && !IsValidSelection())
                 {
-                    FillRectangle(new Rectangle(barLocationX, 2, 1, Height - 4), Color.White);
+                    FillRectangle(new Rectangle(barLocationX, SELECTION_MARGIN, 1, Height - (SELECTION_MARGIN * 2)), Color.White);
                 }
             }
         }

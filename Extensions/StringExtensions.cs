@@ -1,4 +1,4 @@
-namespace Rampastring.XNAUI;
+namespace Rampastring.XNAUI.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="string"/>.

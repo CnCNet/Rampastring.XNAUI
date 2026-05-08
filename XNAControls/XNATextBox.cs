@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Rampastring.Tools;
+using Rampastring.XNAUI.Extensions;
 using Rampastring.XNAUI.FontManagement;
 using Rampastring.XNAUI.Input;
 using System;

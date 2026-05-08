@@ -18,11 +18,13 @@ public static class StringExtensions
         if (str == null)
             throw new ArgumentNullException(nameof(str));
         if (maxLength < 0)
-            throw new ArgumentOutOfRangeException(nameof(maxLength), "maxLength must be non-negative.");
+            throw new ArgumentOutOfRangeException(nameof(maxLength), $"{nameof(maxLength)} must be non-negative.");
+
         if (str.Length <= maxLength)
             return str;
         if (maxLength > 0 && char.IsHighSurrogate(str[maxLength - 1]))
             maxLength--;
+
         return str.Substring(0, maxLength);
     }
 
@@ -39,13 +41,15 @@ public static class StringExtensions
         if (str == null)
             throw new ArgumentNullException(nameof(str));
         if (start < 0 || start > str.Length)
-            throw new ArgumentOutOfRangeException(nameof(start), "start must be within the bounds of the string.");
+            throw new ArgumentOutOfRangeException(nameof(start), $"{nameof(start)} must be within the bounds of the string.");
         if (maxLength < 0)
-            throw new ArgumentOutOfRangeException(nameof(maxLength), "maxLength must be non-negative.");
+            throw new ArgumentOutOfRangeException(nameof(maxLength), $"{nameof(maxLength)} must be non-negative.");
+
         int available = str.Length - start;
         int length = maxLength < available ? maxLength : available;
         if (length > 0 && char.IsHighSurrogate(str[start + length - 1]))
             length--;
+
         return str.Substring(start, length);
     }
 }

@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Rampastring.Tools;
+using Rampastring.XNAUI.Extensions;
 
 namespace Rampastring.XNAUI.FontManagement;
 
@@ -37,6 +38,13 @@ public static class FontManager
     private static List<FontSystem> fontSystems = new();
     private static TextShapingSettings textShapingSettings = new();
     private static FontRenderingSettings fontRenderingSettings = new();
+
+    /// <summary>
+    /// When set before <see cref="LoadFonts"/> runs, skips the Fonts.ini search and
+    /// loads only legacy SpriteFontN.xnb assets. Lets clients offer an opt-out from
+    /// TrueType rendering.
+    /// </summary>
+    public static bool UseLegacySpriteFonts { get; set; }
 
     public static void Initialize()
     {
@@ -131,18 +139,25 @@ public static class FontManager
         string originalContentRoot = contentManager.RootDirectory;
         bool fontsIniFound = false;
 
-        foreach (string searchPath in AssetLoader.AssetSearchPaths)
+        if (UseLegacySpriteFonts)
         {
-            string baseDir = SafePath.GetDirectory(searchPath).FullName;
-            string iniPath = Path.Combine(baseDir, "Fonts.ini");
-
-            if (File.Exists(iniPath))
+            Logger.Log("FontManager: UseLegacySpriteFonts is set, skipping Fonts.ini search");
+        }
+        else
+        {
+            foreach (string searchPath in AssetLoader.AssetSearchPaths)
             {
-                Logger.Log($"FontManager: Loading fonts from {iniPath}");
-                LoadFontsFromIni(iniPath, contentManager, searchPath, baseDir, fontResolutionFactor);
-                fontsIniFound = true;
-                // Stop after first Fonts.ini found
-                break;
+                string baseDir = SafePath.GetDirectory(searchPath).FullName;
+                string iniPath = Path.Combine(baseDir, "Fonts.ini");
+
+                if (File.Exists(iniPath))
+                {
+                    Logger.Log($"FontManager: Loading fonts from {iniPath}");
+                    LoadFontsFromIni(iniPath, contentManager, searchPath, baseDir, fontResolutionFactor);
+                    fontsIniFound = true;
+                    // Stop after first Fonts.ini found
+                    break;
+                }
             }
         }
 

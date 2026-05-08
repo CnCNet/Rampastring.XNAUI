@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Rampastring.XNAUI.FontManagement;
 
 namespace Rampastring.XNAUI;
@@ -70,25 +69,32 @@ public class TextParseReturnValue
                     // Split individual words that are longer than the allowed width
                     if (splitWords && font.MeasureString(word).X > width)
                     {
-                        var sb = new StringBuilder();
-
-                        for (int i = 0; i < word.Length; )
+                        int start = 0;
+                        while (start < word.Length)
                         {
-                            int step = char.IsSurrogatePair(word, i) ? 2 : 1;
-                            string unit = word.Substring(i, step);
-                            if (font.MeasureString(sb.ToString() + unit).X > width)
+                            int remaining = word.Length - start;
+                            int low = 0, high = remaining;
+                            while (low < high)
                             {
-                                returnValue.Add(sb.ToString());
-                                sb.Clear();
+                                int mid = (low + high + 1) / 2;
+                                if (font.MeasureString(word.Substring(start, mid)).X <= width)
+                                    low = mid;
+                                else
+                                    high = mid - 1;
                             }
-
-                            sb.Append(unit);
-                            i += step;
+                            if (low >= remaining)
+                                break;
+                            // Snap to code point boundary to avoid splitting a surrogate pair.
+                            // If no code point fits, force one through to avoid an infinite loop.
+                            if (low > 0 && char.IsHighSurrogate(word[start + low - 1]))
+                                low--;
+                            if (low == 0)
+                                low = char.IsSurrogatePair(word, start) ? 2 : 1;
+                            returnValue.Add(word.Substring(start, low));
+                            start += low;
                         }
 
-                        if (sb.Length > 0)
-                            line = sb.ToString() + " ";
-
+                        line = word.Substring(start) + " ";
                         continue;
                     }
 

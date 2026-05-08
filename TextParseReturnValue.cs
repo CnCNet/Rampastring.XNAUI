@@ -92,7 +92,9 @@ public class TextParseReturnValue
                             start += chunk.Length;
                         }
 
-                        line = word.SubstringSurrogateAware(start, word.Length - start) + " ";
+                        line = start < word.Length
+                            ? word.SubstringSurrogateAware(start, word.Length - start) + " "
+                            : string.Empty;
                         continue;
                     }
 

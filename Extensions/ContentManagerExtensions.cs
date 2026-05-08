@@ -3,7 +3,7 @@
 using System.Reflection;
 #endif
 
-namespace Rampastring.XNAUI;
+namespace Rampastring.XNAUI.Extensions;
 
 public static class ContentManagerExtensions
 {

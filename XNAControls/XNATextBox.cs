@@ -527,13 +527,6 @@ public class XNATextBox : XNAControl
         if (char.IsControl(character))
             return;
 
-        // Don't allow typing characters that don't exist in the spritefont
-        if (Renderer.GetSafeString(character.ToString(), FontIndex) != character.ToString())
-        {
-            InputReceived?.Invoke(this, EventArgs.Empty);
-            return;
-        }
-
         if (!AllowCharacterInput(character))
         {
             InputReceived?.Invoke(this, EventArgs.Empty);

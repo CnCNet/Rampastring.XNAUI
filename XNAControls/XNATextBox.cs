@@ -174,7 +174,7 @@ public class XNATextBox : XNAControl
     private string text = string.Empty;
     private string savedText = string.Empty;
 
-    private char handleCharInput_savedHighSurrogate = '\0';
+    private (char highSurrogate, int inputPosition)? handleCharInputSavedHighSurrogate = null;
 
     /// <summary>
     /// The input character index inside the textbox text.
@@ -541,28 +541,37 @@ public class XNATextBox : XNAControl
         string textToBeInserted;
         if (char.IsLowSurrogate(character))
         {
-            if (handleCharInput_savedHighSurrogate == '\0')
+            if (handleCharInputSavedHighSurrogate == null)
             {
                 // A low surrogate char without a preceding high surrogate char is invalid. Reject it.
                 return;
             }
             else
             {
-                textToBeInserted = new string([handleCharInput_savedHighSurrogate, character]);
-                handleCharInput_savedHighSurrogate = '\0';
+                (char savedHighSurrogate, int savedInputPosition) = handleCharInputSavedHighSurrogate.Value;
+
+                if (InputPosition != savedInputPosition)
+                {
+                    // The input position has changed since the high surrogate was saved. Reject the low surrogate.
+                    handleCharInputSavedHighSurrogate = null;
+                    return;
+                }
+
+                textToBeInserted = new string([savedHighSurrogate, character]);
+                handleCharInputSavedHighSurrogate = null;
             }
         }
         else if (char.IsHighSurrogate(character))
         {
-            handleCharInput_savedHighSurrogate = character;
-
             // Save the high surrogate and do not modify the text.
+            handleCharInputSavedHighSurrogate = (character, InputPosition);
+
             return;
         }
         else
         {
             textToBeInserted = character.ToString();
-            handleCharInput_savedHighSurrogate = '\0';
+            handleCharInputSavedHighSurrogate = null;
         }
 
         if (!IsValidSelection())

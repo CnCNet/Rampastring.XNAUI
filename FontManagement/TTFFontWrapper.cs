@@ -21,7 +21,7 @@ public class TTFFontWrapper : IFont
 
     public Vector2 MeasureString(string text)
     {
-        var bounds = _font.MeasureString(SanitizeStringForRendering(text));
+        var bounds = _font.MeasureString(GetSafeString(text));
         return new Vector2(bounds.X, bounds.Y);
     }
 

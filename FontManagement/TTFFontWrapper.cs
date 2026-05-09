@@ -99,7 +99,7 @@ public class TTFFontWrapper : IFont
             return str;
 
 #if DEBUG
-        System.Diagnostics.Debug.WriteLine($"There is still an unpaired surrogate at index {firstBad} in string \"{str}\". How could this happen?");
+        System.Diagnostics.Debug.WriteLine($"There is still an unpaired surrogate at index {firstBad} in string \"{str}\". If the string comes from Internet, have you called GetSafeString before rendering? If the string does not come from Internet, how could this happen?");
         System.Diagnostics.Debugger.Break();
 #endif
 

@@ -38,13 +38,13 @@ public class TTFFontWrapper : IFont
     {
         var vectorScale = new Vector2(scale, scale);
 
-        // Some fonts render '\r' as a visible glyph (e.g. Unifont),
-        // so normalize all newlines to '\n'. We also sanitize invalid
-        // UTF-16 surrogate pairs so FontStashSharp's UTF-16 -> UTF-32
-        // conversion cannot throw.
+        // Some fonts render `\r` as a visible character, e.g., Unifont. Therefore, we normalize newlines.
         text = text.Replace("\r\n", "\n").Replace('\r', '\n');
 
-        spriteBatch.DrawString(_font, SanitizeStringForRendering(text), location, color, 0f, Vector2.Zero, vectorScale, depth);
+        // We also sanitize invalid UTF-16 surrogate pairs so FontStashSharp's UTF-16 -> UTF-32 conversion cannot throw.
+        text = SanitizeStringForRendering(text);
+
+        spriteBatch.DrawString(_font, text, location, color, 0f, Vector2.Zero, vectorScale, depth);
     }
 
     /// <summary>

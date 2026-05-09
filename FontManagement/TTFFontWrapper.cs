@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Text;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Rampastring.XNAUI.FontManagement;
 

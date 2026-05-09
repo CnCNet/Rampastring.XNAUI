@@ -527,7 +527,7 @@ public class XNATextBox : XNAControl
         if (char.IsControl(character))
             return;
 
-        // Note: we do not check GetSafeString() here anymore. Consider a user typing a non-BMP character like `𰻞`, which is consist of two surrogate chars.
+        // Note: we do not check GetSafeString() here anymore. Consider a user typing a non-BMP character like `𰻞`, which consists of two surrogate chars.
         // IME can only input one char at a time, so the user would first input the high surrogate char, which on its own is an invalid character that cannot be rendered and would be rejected if we checked GetSafeString() here.
 
         if (!AllowCharacterInput(character))

@@ -71,8 +71,11 @@ public class TTFFontWrapper : IFont
     /// </summary>
     private static string SanitizeStringForRendering(string str)
     {
-        if (string.IsNullOrEmpty(str))
-            return str ?? string.Empty;
+        if (str is null)
+            throw new ArgumentNullException(nameof(str));
+
+        if (str.Length == 0)
+            return str;
 
         int firstBad = -1;
         for (int i = 0; i < str.Length; i++)

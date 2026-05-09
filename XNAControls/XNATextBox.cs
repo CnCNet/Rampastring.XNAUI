@@ -567,7 +567,7 @@ public class XNATextBox : XNAControl
 
         if (!IsValidSelection())
         {
-            if (Text.Length >= MaximumTextLength)
+            if (Text.Length + textToBeInserted.Length > MaximumTextLength)
             {
                 InputReceived?.Invoke(this, EventArgs.Empty);
                 return;

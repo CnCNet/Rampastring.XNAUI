@@ -536,55 +536,80 @@ public class XNATextBox : XNAControl
             return;
         }
 
-        if (!IsValidSelection())
+        char prevChar = (InputPosition - 1 >= 0 && text.Length > InputPosition - 1) ? text[InputPosition - 1] : '\0';
+        bool isPrevCharHighSurrogate = prevChar != '\0' && char.IsHighSurrogate(prevChar);
+
+        if (char.IsLowSurrogate(character) && !isPrevCharHighSurrogate)
+            return;
+
+        if (char.IsHighSurrogate(character))
         {
-            if (Text.Length >= MaximumTextLength)
+            if (isPrevCharHighSurrogate)
             {
-                InputReceived?.Invoke(this, EventArgs.Empty);
+                // Both current char and prev char are invalid. Remove the prev char and reject the current char.
+                text = text.Remove(InputPosition - 1, 1);
+                InputPosition--;
+
                 return;
             }
 
-            InputPosition = EnsureCharacterBoundary(InputPosition);
-
+            // There might be a low surrogate char following this one, but we can't know it at this point. Allow the high surrogate to be entered and suppress input received event for now.
             text = text.Insert(InputPosition, character.ToString());
             InputPosition++;
-
-            if (InputPosition > TextEndPosition)
-            {
-                TextEndPosition = InputPosition;
-
-                while (!TextFitsBox())
-                    TextStartPosition = GetNextCharacterBoundary(TextStartPosition);
-            }
-
-            while (TextFitsBox() && TextEndPosition < text.Length)
-            {
-                TextEndPosition = GetNextCharacterBoundary(TextEndPosition);
-            }
-
-            if (!TextFitsBox())
-            {
-                TextEndPosition = GetPreviousCharacterBoundary(TextEndPosition);
-            }
+            return;
         }
         else
         {
-            text = text.Substring(0, SelectionStartPosition) + character.ToString() + text.Substring(SelectionEndPosition);
-            InputPosition = SelectionStartPosition + 1;
-            UnselectText();
-
-            TextStartPosition = Math.Min(TextStartPosition, text.Length);
-            TextEndPosition = Math.Min(TextEndPosition, text.Length);
-
-            if (TextStartPosition > 0 && TextFitsBox())
+            if (!IsValidSelection())
             {
-                while (TextFitsBox() && TextStartPosition > 0)
+                if (Text.Length >= MaximumTextLength)
                 {
-                    TextStartPosition = GetPreviousCharacterBoundary(TextStartPosition);
+                    InputReceived?.Invoke(this, EventArgs.Empty);
+                    return;
                 }
 
-                if (TextStartPosition > 0)
-                    TextStartPosition = GetNextCharacterBoundary(TextStartPosition);
+                InputPosition = EnsureCharacterBoundary(InputPosition);
+
+                text = text.Insert(InputPosition, character.ToString());
+                InputPosition++;
+
+                if (InputPosition > TextEndPosition)
+                {
+                    TextEndPosition = InputPosition;
+
+                    while (!TextFitsBox())
+                        TextStartPosition = GetNextCharacterBoundary(TextStartPosition);
+                }
+
+                while (TextFitsBox() && TextEndPosition < text.Length)
+                {
+                    TextEndPosition = GetNextCharacterBoundary(TextEndPosition);
+                }
+
+                if (!TextFitsBox())
+                {
+                    TextEndPosition = GetPreviousCharacterBoundary(TextEndPosition);
+                }
+            }
+            else
+            {
+                text = text.Substring(0, SelectionStartPosition) + character.ToString() + text.Substring(SelectionEndPosition);
+                InputPosition = SelectionStartPosition + 1;
+                UnselectText();
+
+                TextStartPosition = Math.Min(TextStartPosition, text.Length);
+                TextEndPosition = Math.Min(TextEndPosition, text.Length);
+
+                if (TextStartPosition > 0 && TextFitsBox())
+                {
+                    while (TextFitsBox() && TextStartPosition > 0)
+                    {
+                        TextStartPosition = GetPreviousCharacterBoundary(TextStartPosition);
+                    }
+
+                    if (TextStartPosition > 0)
+                        TextStartPosition = GetNextCharacterBoundary(TextStartPosition);
+                }
             }
         }
 

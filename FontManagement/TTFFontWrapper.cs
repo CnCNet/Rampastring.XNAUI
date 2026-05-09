@@ -1,8 +1,8 @@
 using System;
+using System.Text;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Text;
 
 namespace Rampastring.XNAUI.FontManagement;
 
@@ -43,9 +43,8 @@ public class TTFFontWrapper : IFont
         // UTF-16 surrogate pairs so FontStashSharp's UTF-16 -> UTF-32
         // conversion cannot throw.
         text = text.Replace("\r\n", "\n").Replace('\r', '\n');
-        var segment = new StringSegment(SanitizeStringForRendering(text));
 
-        spriteBatch.DrawString(_font, segment, location, color, 0f, Vector2.Zero, vectorScale, depth);
+        spriteBatch.DrawString(_font, SanitizeStringForRendering(text), location, color, 0f, Vector2.Zero, vectorScale, depth);
     }
 
     /// <summary>

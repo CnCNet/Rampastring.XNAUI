@@ -607,6 +607,12 @@ public class XNATextBox : XNAControl
         }
         else
         {
+            if (text.Length - (SelectionEndPosition - SelectionStartPosition) + textToBeInserted.Length > MaximumTextLength)
+            {
+                InputReceived?.Invoke(this, EventArgs.Empty);
+                return;
+            }
+
             text = text.Substring(0, SelectionStartPosition) + textToBeInserted + text.Substring(SelectionEndPosition);
             InputPosition = SelectionStartPosition + textToBeInserted.Length;
             UnselectText();

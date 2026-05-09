@@ -44,11 +44,6 @@ public class TTFFontWrapper : IFont
         spriteBatch.DrawString(_font, segment, location, color, 0f, Vector2.Zero, vectorScale, depth);
     }
 
-    public void DrawString(SpriteBatch spriteBatch, StringSegment text, Vector2 location, Color color, float rotation, Vector2 origin, Vector2 scale, float depth)
-    {
-        spriteBatch.DrawString(_font, text, location, color, rotation, origin, scale, depth);
-    }
-
     /// <summary>
     /// For TTF fonts, this always returns true because FontStashSharp can dynamically
     /// generate glyphs for any character. If a glyph is not available in the font file,

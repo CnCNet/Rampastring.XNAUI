@@ -1,4 +1,3 @@
-using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -16,7 +15,6 @@ public interface IFont
     /// </summary>
     int GetVerticalCenteringValue();
     void DrawString(SpriteBatch spriteBatch, string text, Vector2 location, Color color, float scale, float depth);
-    void DrawString(SpriteBatch spriteBatch, StringSegment text, Vector2 location, Color color, float rotation, Vector2 origin, Vector2 scale, float depth);
     bool HasCharacter(char c);
     string GetSafeString(string str);
 }

@@ -1,8 +1,9 @@
-using System;
-using System.Text;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Text;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Rampastring.XNAUI.FontManagement;
 
@@ -38,11 +39,7 @@ public class TTFFontWrapper : IFont
     {
         var vectorScale = new Vector2(scale, scale);
 
-        // Some fonts render `\r` as a visible character, e.g., Unifont. Therefore, we normalize newlines.
-        text = text.Replace("\r\n", "\n").Replace('\r', '\n');
-
-        // We also sanitize invalid UTF-16 surrogate pairs so FontStashSharp's UTF-16 -> UTF-32 conversion cannot throw.
-        text = SanitizeStringForRendering(text);
+        text = GetSafeString(text);
 
         spriteBatch.DrawString(_font, text, location, color, 0f, Vector2.Zero, vectorScale, depth);
     }
@@ -55,10 +52,17 @@ public class TTFFontWrapper : IFont
     public bool HasCharacter(char c) => true;
 
     /// <summary>
-    /// Returns a sanitized string safe for rendering (replaces unpaired surrogates
-    /// with U+FFFD so FontStashSharp's UTF-16 -> UTF-32 conversion does not throw).
+    /// Returns a sanitized string safe for rendering. It replaces unpaired surrogates
+    /// with U+FFFD so FontStashSharp's UTF-16 -> UTF-32 conversion does not throw.
     /// </summary>
-    public string GetSafeString(string str) => SanitizeStringForRendering(str);
+    public string GetSafeString(string str)
+    {
+        // Some fonts render `\r` as a visible character, e.g., Unifont. Therefore, we normalize newlines.
+        str = str.Replace("\r\n", "\n").Replace('\r', '\n');
+
+        // We also sanitize invalid UTF-16 surrogate pairs so FontStashSharp's UTF-16 -> UTF-32 conversion cannot throw.
+        return SanitizeStringForRendering(str);
+    }
 
     /// <summary>
     /// Replaces unpaired UTF-16 surrogates with U+FFFD. Returns the original

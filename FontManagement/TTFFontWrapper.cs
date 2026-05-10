@@ -1,7 +1,8 @@
-using System;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Text;
 
 namespace Rampastring.XNAUI.FontManagement;
 
@@ -20,7 +21,7 @@ public class TTFFontWrapper : IFont
 
     public Vector2 MeasureString(string text)
     {
-        var bounds = _font.MeasureString(text);
+        var bounds = _font.MeasureString(GetSafeString(text));
         return new Vector2(bounds.X, bounds.Y);
     }
 
@@ -37,11 +38,9 @@ public class TTFFontWrapper : IFont
     {
         var vectorScale = new Vector2(scale, scale);
 
-        // Some fonts render `\r` as a visible character, e.g., Unifont. Therefore, we normalize newlines.
-        text = text.Replace("\r\n", "\n").Replace('\r', '\n');
-        var segment = new StringSegment(text);
+        text = GetSafeString(text);
 
-        spriteBatch.DrawString(_font, segment, location, color, 0f, Vector2.Zero, vectorScale, depth);
+        spriteBatch.DrawString(_font, text, location, color, 0f, Vector2.Zero, vectorScale, depth);
     }
 
     /// <summary>
@@ -52,8 +51,91 @@ public class TTFFontWrapper : IFont
     public bool HasCharacter(char c) => true;
 
     /// <summary>
-    /// Returns the string as-is for TTF fonts.
-    /// TTF fonts handle all characters through dynamic glyph generation and fallback.
+    /// Returns a sanitized string safe for rendering. It replaces unpaired surrogates
+    /// with U+FFFD so FontStashSharp's UTF-16 -> UTF-32 conversion does not throw.
     /// </summary>
-    public string GetSafeString(string str) => str;
+    public string GetSafeString(string str)
+    {
+        // Some fonts render `\r` as a visible character, e.g., Unifont. Therefore, we normalize newlines.
+        str = str.Replace("\r\n", "\n").Replace('\r', '\n');
+
+        // We also sanitize invalid UTF-16 surrogate pairs so FontStashSharp's UTF-16 -> UTF-32 conversion cannot throw.
+        return SanitizeStringForRendering(str);
+    }
+
+    /// <summary>
+    /// Replaces unpaired UTF-16 surrogates with U+FFFD. Returns the original
+    /// string reference unchanged when the input is already valid (the common case),
+    /// to avoid allocations on the rendering hot path.
+    /// </summary>
+    private static string SanitizeStringForRendering(string str)
+    {
+        if (str is null)
+            throw new ArgumentNullException(nameof(str));
+
+        if (str.Length == 0)
+            return str;
+
+        int firstBad = -1;
+        for (int i = 0; i < str.Length; i++)
+        {
+            char c = str[i];
+            if (char.IsHighSurrogate(c))
+            {
+                if (i + 1 < str.Length && char.IsLowSurrogate(str[i + 1]))
+                {
+                    i++;
+                    continue;
+                }
+                firstBad = i;
+                break;
+            }
+            if (char.IsLowSurrogate(c))
+            {
+                firstBad = i;
+                break;
+            }
+        }
+
+        if (firstBad < 0)
+            return str;
+
+#if DEBUG
+        System.Diagnostics.Debug.WriteLine($"There is still an unpaired surrogate at index {firstBad} in string \"{str}\". If the string comes from Internet, have you called GetSafeString before rendering? If the string does not come from Internet, how could this happen?");
+        System.Diagnostics.Debugger.Break();
+#endif
+
+        var sb = new StringBuilder(str.Length);
+        if (firstBad > 0)
+            sb.Append(str, 0, firstBad);
+
+        for (int i = firstBad; i < str.Length; i++)
+        {
+            char c = str[i];
+
+            if (char.IsHighSurrogate(c))
+            {
+                if (i + 1 < str.Length && char.IsLowSurrogate(str[i + 1]))
+                {
+                    sb.Append(c);
+                    sb.Append(str[i + 1]);
+                    i++;
+                }
+                else
+                {
+                    sb.Append('\uFFFD');
+                }
+            }
+            else if (char.IsLowSurrogate(c))
+            {
+                sb.Append('\uFFFD');
+            }
+            else
+            {
+                sb.Append(c);
+            }
+        }
+
+        return sb.ToString();
+    }
 }

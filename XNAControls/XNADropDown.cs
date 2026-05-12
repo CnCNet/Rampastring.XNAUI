@@ -705,7 +705,9 @@ public class XNADropDown : XNAControl
             if (item.Text != null)
             {
                 string displayText = GetDisplayTextForSelectedItem(item, textX);
-                int textY = dropDownRect.Y + Math.Max(0, (dropDownRect.Height - FontManager.GetFontVerticalCenteringValue(FontIndex)) / 2);
+                int textY = FontManager.IsSpriteFont(FontIndex)
+                    ? dropDownRect.Y + 2
+                    : dropDownRect.Y + Math.Max(0, (dropDownRect.Height - FontManager.GetFontVerticalCenteringValue(FontIndex)) / 2);
                 DrawStringWithShadow(displayText, FontIndex,
                     new Vector2(textX, textY), GetItemTextColor(item));
             }
@@ -782,7 +784,9 @@ public class XNADropDown : XNAControl
 
         if (item.Text != null)
         {
-            int textY = y + Math.Max(0, (ItemHeight - FontManager.GetFontVerticalCenteringValue(FontIndex)) / 2);
+            int textY = FontManager.IsSpriteFont(FontIndex)
+                ? y + 1
+                : y + Math.Max(0, (ItemHeight - FontManager.GetFontVerticalCenteringValue(FontIndex)) / 2);
             DrawStringWithShadow(item.Text, FontIndex, new Vector2(textX, textY), textColor);
         }
     }

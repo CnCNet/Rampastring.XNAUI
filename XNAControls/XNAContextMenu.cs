@@ -467,12 +467,16 @@ public class XNAContextMenu : XNAControl
 
         int contentTop = point.Y + TextVerticalPadding;
         int contentHeight = Math.Max(0, itemHeight - TextVerticalPadding * 2);
-        int textY = contentTop + Math.Max(0, (contentHeight - FontManager.GetFontVerticalCenteringValue(FontIndex)) / 2);
+        int textY = FontManager.IsSpriteFont(FontIndex)
+            ? point.Y + TextVerticalPadding
+            : contentTop + Math.Max(0, (contentHeight - FontManager.GetFontVerticalCenteringValue(FontIndex)) / 2);
         DrawStringWithShadow(item.Text, FontIndex, new Vector2(textX, textY), textColor);
         if (item.HintText != null)
         {
             int hintTextX = Width - TextHorizontalPadding - (int)Renderer.GetTextDimensions(item.HintText, HintFontIndex).X;
-            int hintTextY = contentTop + Math.Max(0, (contentHeight - FontManager.GetFontVerticalCenteringValue(HintFontIndex)) / 2);
+            int hintTextY = FontManager.IsSpriteFont(HintFontIndex)
+                ? point.Y + TextVerticalPadding
+                : contentTop + Math.Max(0, (contentHeight - FontManager.GetFontVerticalCenteringValue(HintFontIndex)) / 2);
             DrawStringWithShadow(item.HintText, HintFontIndex, new Vector2(hintTextX, hintTextY), textColor);
         }
 

@@ -189,6 +189,8 @@ public class XNACheckBox : XNAControl
             Vector2 textDimensions = Renderer.GetTextDimensions(Text, FontIndex);
 
             TextLocationY = (CheckedTexture.Height - FontManager.GetFontVerticalCenteringValue(FontIndex)) / 2;
+            if (FontManager.IsSpriteFont(FontIndex))
+                TextLocationY--;
 
             Width = (int)textDimensions.X + TEXT_PADDING_DEFAULT + CheckedTexture.Width;
             Height = Math.Max((int)textDimensions.Y, CheckedTexture.Height);

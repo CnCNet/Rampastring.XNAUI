@@ -20,7 +20,9 @@ public class XNATextBox : XNAControl
     protected const int TEXT_HORIZONTAL_MARGIN = 3;
     protected const int TEXT_VERTICAL_MARGIN = 2;
 
-    protected int TextDrawY => Math.Max(TEXT_VERTICAL_MARGIN, (Height - FontManager.GetFontVerticalCenteringValue(FontIndex)) / 2);
+    protected int TextDrawY => FontManager.IsSpriteFont(FontIndex)
+        ? TEXT_VERTICAL_MARGIN
+        : Math.Max(TEXT_VERTICAL_MARGIN, (Height - FontManager.GetFontVerticalCenteringValue(FontIndex)) / 2);
     protected const double CURSOR_SCROLL_REPEAT_TIME = 0.05;
     protected const double CURSOR_FAST_SCROLL_THRESHOLD = 20;
     protected const double BAR_ON_TIME = 0.5;

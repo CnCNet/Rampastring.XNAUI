@@ -546,6 +546,14 @@ public static class FontManager
         return fonts[fontIndex].GetVerticalCenteringValue();
     }
 
+    public static bool IsSpriteFont(int fontIndex)
+    {
+        if (fontIndex < 0 || fontIndex >= fonts.Count)
+            throw new IndexOutOfRangeException($"Invalid font index. {fonts.Count} fonts loaded, requested index: {fontIndex}");
+
+        return fonts[fontIndex] is SpriteFontWrapper;
+    }
+
     public static void DrawString(SpriteBatch spriteBatch, string text, int fontIndex, Vector2 location, Color color, float scale = 1.0f, float depth = 0f)
     {
         if (fontIndex < 0 || fontIndex >= fonts.Count)

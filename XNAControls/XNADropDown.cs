@@ -171,9 +171,12 @@ public class XNADropDown : XNAControl
     public bool OpenUp { get; set; }
 
     /// <summary>
-    /// If disabled, the drop-down will not truncate the selected item's text when the list is closed, even if it overflows the control's bounds.
+    /// When the selected item's text is too wide for the closed control, it is always
+    /// cut off at the last fully fitting character so it does not visually overrun the
+    /// control's bounds. If this property is enabled, an ellipsis ("...") is appended
+    /// to indicate that the text has been truncated.
     /// </summary>
-    public bool TruncateOverflowingText { get; set; } = true;
+    public bool ShowEllipsisOnOverflow { get; set; } = false;
 
     public Texture2D DropDownTexture { get; set; }
     public Texture2D DropDownOpenTexture { get; set; }
@@ -342,8 +345,8 @@ public class XNADropDown : XNAControl
             case "DisabledItemColor":
                 DisabledItemColor = AssetLoader.GetColorFromString(value);
                 return;
-            case "TruncateOverflowingText":
-                TruncateOverflowingText = Conversions.BooleanFromString(value, true);
+            case "ShowEllipsisOnOverflow":
+                ShowEllipsisOnOverflow = Conversions.BooleanFromString(value, false);
                 return;
         }
 
@@ -600,14 +603,12 @@ public class XNADropDown : XNAControl
     }
 
     /// <summary>
-    /// Gets the display text for the selected item.
-    /// Truncates with ellipsis if TruncateOverflowingText is enabled.
+    /// Gets the display text for the selected item, fitted to the control's bounds so
+    /// it does not visually overrun the control. Appends an ellipsis to indicate
+    /// truncation when <see cref="ShowEllipsisOnOverflow"/> is enabled.
     /// </summary>
     private string GetDisplayTextForSelectedItem(XNADropDownItem item, int textX)
     {
-        if (!TruncateOverflowingText)
-            return item.Text;
-        
         (string cachedDisplayText, int cachedSelectedIndex, int cachedWidth, int cachedFontIndex, string cachedItemText) = displayTextCache;
 
         if (cachedDisplayText != null &&
@@ -636,7 +637,9 @@ public class XNADropDown : XNAControl
                 if (textSize.X > availableWidth)
                 {
                     const string ellipsis = "...";
-                    float ellipsisWidth = Renderer.MeasureString(ellipsis, FontIndex).X;
+                    float ellipsisWidth = ShowEllipsisOnOverflow
+                        ? Renderer.MeasureString(ellipsis, FontIndex).X
+                        : 0f;
                     float maxWidth = availableWidth - ellipsisWidth;
 
                     if (maxWidth <= 0)
@@ -666,7 +669,9 @@ public class XNADropDown : XNAControl
                             }
                         }
 
-                        displayText = item.Text.SubstringSurrogateAware(0, bestFit) + ellipsis;
+                        displayText = item.Text.SubstringSurrogateAware(0, bestFit);
+                        if (ShowEllipsisOnOverflow)
+                            displayText += ellipsis;
                     }
                 }
             }

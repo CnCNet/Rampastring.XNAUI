@@ -7,7 +7,6 @@ namespace Rampastring.XNAUI.FontManagement;
 public class SpriteFontWrapper : IFont
 {
     internal readonly SpriteFont _font;
-    private readonly int _verticalCenteringValue;
 
     public SpriteFontWrapper(SpriteFont font)
     {

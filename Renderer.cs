@@ -309,6 +309,12 @@ public static class Renderer
     public static Vector2 GetTextDimensions(string text, int fontIndex) =>
         FontManager.GetTextDimensions(text, fontIndex);
 
+    public static int GetTextYPadding(string text, int fontIndex, int containerHeight) =>
+        FontManager.GetTextYPadding(text, fontIndex, containerHeight);
+
+    public static int GetSingleLineTextYPadding(int fontIndex, int containerHeight) =>
+        FontManager.GetSingleLineTextYPadding(fontIndex, containerHeight);
+
     public static void DrawLine(Vector2 start, Vector2 end, Color color, int thickness = 1, float depth = 0f)
     {
         Vector2 line = end - start;

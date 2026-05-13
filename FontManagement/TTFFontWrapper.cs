@@ -37,7 +37,7 @@ public class TTFFontWrapper : IFont
     // SadPencil: what if text has more than one line?
     public int GetTextYPadding(int containerHeight, string text) => string.IsNullOrEmpty(text) ? 0 : GetTextYPadding(containerHeight);
 
-    public int GetTextYPadding(int containerHeight) => containerHeight - GetVerticalCenteringValue() / 2;
+    public int GetTextYPadding(int containerHeight) => (containerHeight - GetVerticalCenteringValue()) / 2;
     public int GetSingleLineTextYPadding(int containerHeight) => GetTextYPadding(containerHeight);
 
     public void DrawString(SpriteBatch spriteBatch, string text, Vector2 location, Color color, float scale, float depth)

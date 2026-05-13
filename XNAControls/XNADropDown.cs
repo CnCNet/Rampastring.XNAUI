@@ -170,6 +170,11 @@ public class XNADropDown : XNAControl
     /// </summary>
     public bool OpenUp { get; set; }
 
+    /// <summary>
+    /// If disabled, the drop-down will not truncate the selected item's text when the list is closed, even if it overflows the control's bounds.
+    /// </summary>
+    public bool TruncateOverflowingText { get; set; } = true;
+
     public Texture2D DropDownTexture { get; set; }
     public Texture2D DropDownOpenTexture { get; set; }
 
@@ -340,6 +345,9 @@ public class XNADropDown : XNAControl
                 return;
             case "DisabledItemColor":
                 DisabledItemColor = AssetLoader.GetColorFromString(value);
+                return;
+            case "TruncateOverflowingText":
+                TruncateOverflowingText = Conversions.BooleanFromString(value, true);
                 return;
         }
 
@@ -597,10 +605,13 @@ public class XNADropDown : XNAControl
 
     /// <summary>
     /// Gets the display text for the selected item.
-    /// Truncates with ellipsis if required.
+    /// Truncates with ellipsis if TruncateOverflowingText is enabled.
     /// </summary>
     private string GetDisplayTextForSelectedItem(XNADropDownItem item, int textX)
     {
+        if (!TruncateOverflowingText)
+            return item.Text;
+
         if (cachedDisplayText != null &&
             cachedSelectedIndex == SelectedIndex &&
             cachedWidth == Width &&

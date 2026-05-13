@@ -2,6 +2,7 @@ using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 using System.Text;
 
 namespace Rampastring.XNAUI.FontManagement;
@@ -34,11 +35,9 @@ public class TTFFontWrapper : IFont
     /// </summary>
     public int GetVerticalCenteringValue() => _verticalCenteringValue;
 
-    // SadPencil: what if text has more than one line?
-    public int GetTextYPadding(int containerHeight, string text) => string.IsNullOrEmpty(text) ? 0 : GetTextYPadding(containerHeight);
+    public int GetTextYPadding(int containerHeight, string text) => string.IsNullOrEmpty(text) ? 0 : (containerHeight - GetVerticalCenteringValue() - _font.LineHeight * text.Count(c => c == '\n')) / 2;
 
-    public int GetTextYPadding(int containerHeight) => (containerHeight - GetVerticalCenteringValue()) / 2;
-    public int GetSingleLineTextYPadding(int containerHeight) => GetTextYPadding(containerHeight);
+    public int GetSingleLineTextYPadding(int containerHeight) => (containerHeight - GetVerticalCenteringValue()) / 2;
 
     public void DrawString(SpriteBatch spriteBatch, string text, Vector2 location, Color color, float scale, float depth)
     {

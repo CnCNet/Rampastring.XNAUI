@@ -239,11 +239,7 @@ public class XNADropDown : XNAControl
     // Cache for the truncated display text produced by GetDisplayTextForSelectedItem.
     // That method is called every frame from DrawSelectedItem; without this cache it
     // would re-run the MeasureString truncation on each draw.
-    private string cachedDisplayText = null;
-    private int cachedSelectedIndex = -1;
-    private int cachedWidth = 0;
-    private int cachedFontIndex = 0;
-    private string cachedItemText = null;
+    private (string cachedDisplayText, int cachedSelectedIndex, int cachedWidth, int cachedFontIndex, string cachedItemText) displayTextCache = (null, -1, 0, 0, null);
 
     #region AddItem methods
 
@@ -600,7 +596,7 @@ public class XNADropDown : XNAControl
     /// </summary>
     private void InvalidateDisplayTextCache()
     {
-        cachedDisplayText = null;
+        displayTextCache = (null, -1, 0, 0, null);
     }
 
     /// <summary>
@@ -611,6 +607,8 @@ public class XNADropDown : XNAControl
     {
         if (!TruncateOverflowingText)
             return item.Text;
+        
+        (string cachedDisplayText, int cachedSelectedIndex, int cachedWidth, int cachedFontIndex, string cachedItemText) = displayTextCache;
 
         if (cachedDisplayText != null &&
             cachedSelectedIndex == SelectedIndex &&
@@ -674,11 +672,7 @@ public class XNADropDown : XNAControl
             }
         }
 
-        cachedDisplayText = displayText;
-        cachedSelectedIndex = SelectedIndex;
-        cachedWidth = Width;
-        cachedFontIndex = FontIndex;
-        cachedItemText = item.Text;
+        displayTextCache = (displayText, SelectedIndex, Width, FontIndex, item.Text);
 
         return displayText;
     }

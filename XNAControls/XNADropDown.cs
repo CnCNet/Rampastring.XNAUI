@@ -624,7 +624,7 @@ public class XNADropDown : XNAControl
 
         if (item.Text != null)
         {
-            int availableWidth = Width - textX - DropDownTexture.Width - 2;
+            int availableWidth = ShowEllipsisOnOverflow ? (Width - textX - DropDownTexture.Width - 2) : (Width - textX);
 
             if (availableWidth <= 0)
             {

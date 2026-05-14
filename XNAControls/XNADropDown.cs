@@ -170,13 +170,19 @@ public class XNADropDown : XNAControl
     /// </summary>
     public bool OpenUp { get; set; }
 
+    private bool _showEllipsisOnOverflow = false;
+
     /// <summary>
     /// When the selected item's text is too wide for the closed control, it is always
     /// cut off at the last fully fitting character so it does not visually overrun the
     /// control's bounds. If this property is enabled, an ellipsis ("...") is appended
     /// to indicate that the text has been truncated.
     /// </summary>
-    public bool ShowEllipsisOnOverflow { get; set; } = false;
+    public bool ShowEllipsisOnOverflow
+    {
+        get => _showEllipsisOnOverflow;
+        set => _showEllipsisOnOverflow = value;
+    }
 
     public Texture2D DropDownTexture { get; set; }
     public Texture2D DropDownOpenTexture { get; set; }

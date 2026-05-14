@@ -15,7 +15,7 @@ public class SpriteFontWrapper : IFont
 
     public Vector2 MeasureString(string text) => _font.MeasureString(text);
 
-    public int GetTextYPadding(int containerHeight, string text) => string.IsNullOrEmpty(text) ? containerHeight / 2 : GetTextYPadding(containerHeight, MeasureStringY(text));
+    public int GetTextYPadding(int containerHeight, string text) => string.IsNullOrEmpty(text) ? (containerHeight / 2) : GetTextYPadding(containerHeight, MeasureStringY(text));
     private int GetTextYPadding(int containerHeight, int textYDimension) => (containerHeight - textYDimension) / 2 - 1; // Use `- 1` to manually adjust for vertical centering.
     public int GetSingleLineTextYPadding(int containerHeight) => GetTextYPadding(containerHeight, _font.LineSpacing);
 

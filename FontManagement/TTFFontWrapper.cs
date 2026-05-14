@@ -35,7 +35,7 @@ public class TTFFontWrapper : IFont
     /// </summary>
     public int GetVerticalCenteringValue() => _verticalCenteringValue;
 
-    public int GetTextYPadding(int containerHeight, string text) => string.IsNullOrEmpty(text) ? containerHeight / 2 : (containerHeight - GetVerticalCenteringValue() - _font.LineHeight * text.Count(c => c == '\n')) / 2;
+    public int GetTextYPadding(int containerHeight, string text) => string.IsNullOrEmpty(text) ? (containerHeight / 2) : (containerHeight - GetVerticalCenteringValue() - _font.LineHeight * text.Count(c => c == '\n')) / 2;
 
     public int GetSingleLineTextYPadding(int containerHeight) => (containerHeight - GetVerticalCenteringValue()) / 2;
 

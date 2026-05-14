@@ -170,6 +170,24 @@ public class XNADropDown : XNAControl
     /// </summary>
     public bool OpenUp { get; set; }
 
+    private bool _showEllipsisOnOverflow = false;
+
+    /// <summary>
+    /// When the selected item's text is too wide for the closed control, it is always
+    /// cut off at the last fully fitting character so it does not visually overrun the
+    /// control's bounds. If this property is enabled, an ellipsis ("...") is appended
+    /// to indicate that the text has been truncated.
+    /// </summary>
+    public bool ShowEllipsisOnOverflow
+    {
+        get => _showEllipsisOnOverflow;
+        set
+        {
+            _showEllipsisOnOverflow = value;
+            InvalidateDisplayTextCache();
+        }
+    }
+
     public Texture2D DropDownTexture { get; set; }
     public Texture2D DropDownOpenTexture { get; set; }
 
@@ -234,11 +252,7 @@ public class XNADropDown : XNAControl
     // Cache for the truncated display text produced by GetDisplayTextForSelectedItem.
     // That method is called every frame from DrawSelectedItem; without this cache it
     // would re-run the MeasureString truncation on each draw.
-    private string cachedDisplayText = null;
-    private int cachedSelectedIndex = -1;
-    private int cachedWidth = 0;
-    private int cachedFontIndex = 0;
-    private string cachedItemText = null;
+    private (string cachedDisplayText, int cachedSelectedIndex, int cachedWidth, int cachedFontIndex, string cachedItemText) displayTextCache = (null, -1, 0, 0, null);
 
     #region AddItem methods
 
@@ -340,6 +354,9 @@ public class XNADropDown : XNAControl
                 return;
             case "DisabledItemColor":
                 DisabledItemColor = AssetLoader.GetColorFromString(value);
+                return;
+            case "ShowEllipsisOnOverflow":
+                ShowEllipsisOnOverflow = Conversions.BooleanFromString(value, false);
                 return;
         }
 
@@ -592,15 +609,18 @@ public class XNADropDown : XNAControl
     /// </summary>
     private void InvalidateDisplayTextCache()
     {
-        cachedDisplayText = null;
+        displayTextCache = (null, -1, 0, 0, null);
     }
 
     /// <summary>
-    /// Gets the display text for the selected item.
-    /// Truncates with ellipsis if required.
+    /// Gets the display text for the selected item, fitted to the control's bounds so
+    /// it does not visually overrun the control. Appends an ellipsis to indicate
+    /// truncation when <see cref="ShowEllipsisOnOverflow"/> is enabled.
     /// </summary>
     private string GetDisplayTextForSelectedItem(XNADropDownItem item, int textX)
     {
+        (string cachedDisplayText, int cachedSelectedIndex, int cachedWidth, int cachedFontIndex, string cachedItemText) = displayTextCache;
+
         if (cachedDisplayText != null &&
             cachedSelectedIndex == SelectedIndex &&
             cachedWidth == Width &&
@@ -614,7 +634,7 @@ public class XNADropDown : XNAControl
 
         if (item.Text != null)
         {
-            int availableWidth = Width - textX - DropDownTexture.Width - 2;
+            int availableWidth = ShowEllipsisOnOverflow ? (Width - textX - DropDownTexture.Width - 2) : (Width - textX - 2);
 
             if (availableWidth <= 0)
             {
@@ -627,7 +647,9 @@ public class XNADropDown : XNAControl
                 if (textSize.X > availableWidth)
                 {
                     const string ellipsis = "...";
-                    float ellipsisWidth = Renderer.MeasureString(ellipsis, FontIndex).X;
+                    float ellipsisWidth = ShowEllipsisOnOverflow
+                        ? Renderer.MeasureString(ellipsis, FontIndex).X
+                        : 0f;
                     float maxWidth = availableWidth - ellipsisWidth;
 
                     if (maxWidth <= 0)
@@ -657,17 +679,15 @@ public class XNADropDown : XNAControl
                             }
                         }
 
-                        displayText = item.Text.SubstringSurrogateAware(0, bestFit) + ellipsis;
+                        displayText = item.Text.SubstringSurrogateAware(0, bestFit);
+                        if (ShowEllipsisOnOverflow)
+                            displayText += ellipsis;
                     }
                 }
             }
         }
 
-        cachedDisplayText = displayText;
-        cachedSelectedIndex = SelectedIndex;
-        cachedWidth = Width;
-        cachedFontIndex = FontIndex;
-        cachedItemText = item.Text;
+        displayTextCache = (displayText, SelectedIndex, Width, FontIndex, item.Text);
 
         return displayText;
     }

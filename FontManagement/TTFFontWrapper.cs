@@ -2,6 +2,7 @@ using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 using System.Text;
 
 namespace Rampastring.XNAUI.FontManagement;
@@ -33,6 +34,10 @@ public class TTFFontWrapper : IFont
     /// independent of descenders. The geometric glyph height would be <c>maxY - minY</c>.
     /// </summary>
     public int GetVerticalCenteringValue() => _verticalCenteringValue;
+
+    public int GetTextYPadding(int containerHeight, string text) => string.IsNullOrEmpty(text) ? (containerHeight / 2) : (containerHeight - GetVerticalCenteringValue() - _font.LineHeight * text.Count(c => c == '\n')) / 2;
+
+    public int GetSingleLineTextYPadding(int containerHeight) => (containerHeight - GetVerticalCenteringValue()) / 2;
 
     public void DrawString(SpriteBatch spriteBatch, string text, Vector2 location, Color color, float scale, float depth)
     {

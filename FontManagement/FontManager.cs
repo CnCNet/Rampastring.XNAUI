@@ -532,18 +532,19 @@ public static class FontManager
         return fonts[fontIndex].MeasureString(text);
     }
 
-    /// <summary>
-    /// Returns the value <c>V</c> to plug into <c>(controlHeight - V) / 2</c> for
-    /// vertical centering. NOT a geometric font height — see
-    /// <see cref="IFont.GetVerticalCenteringValue"/> for the per-font-type semantics.
-    /// The value does not vary with the text being drawn (no descender-induced shift).
-    /// </summary>
-    public static int GetFontVerticalCenteringValue(int fontIndex)
+    public static int GetTextYPadding(string text, int fontIndex, int containerHeight)
     {
         if (fontIndex < 0 || fontIndex >= fonts.Count)
             throw new IndexOutOfRangeException($"Invalid font index. {fonts.Count} fonts loaded, requested index: {fontIndex}");
 
-        return fonts[fontIndex].GetVerticalCenteringValue();
+        return fonts[fontIndex].GetTextYPadding(containerHeight, text);
+    }
+
+    public static int GetSingleLineTextYPadding(int fontIndex, int containerHeight)
+    {
+        if (fontIndex < 0 || fontIndex >= fonts.Count)
+            throw new IndexOutOfRangeException($"Invalid font index. {fonts.Count} fonts loaded, requested index: {fontIndex}");
+        return fonts[fontIndex].GetSingleLineTextYPadding(containerHeight);
     }
 
     public static void DrawString(SpriteBatch spriteBatch, string text, int fontIndex, Vector2 location, Color color, float scale = 1.0f, float depth = 0f)

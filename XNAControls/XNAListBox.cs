@@ -468,7 +468,7 @@ public class XNAListBox : XNAPanel
         if (textLines.Count == 1)
         {
             Vector2 textSize = Renderer.GetTextDimensions(textLines[0], FontIndex);
-            listBoxItem.TextYPadding = (LineHeight - FontManager.GetFontVerticalCenteringValue(FontIndex)) / 2;
+            listBoxItem.TextYPadding = Renderer.GetSingleLineTextYPadding(FontIndex, LineHeight);
 
             if (listBoxItem.IsHeader)
             {

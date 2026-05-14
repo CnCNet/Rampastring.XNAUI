@@ -181,7 +181,11 @@ public class XNADropDown : XNAControl
     public bool ShowEllipsisOnOverflow
     {
         get => _showEllipsisOnOverflow;
-        set => _showEllipsisOnOverflow = value;
+        set
+        {
+            _showEllipsisOnOverflow = value;
+            InvalidateDisplayTextCache();
+        }
     }
 
     public Texture2D DropDownTexture { get; set; }

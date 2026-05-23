@@ -171,6 +171,10 @@ public class XNACheckBox : XNAControl
             case "Checked":
                 Checked = Conversions.BooleanFromString(value, true);
                 return;
+            case "TextPadding":
+                TextPadding = Conversions.IntFromString(value, TextPadding);
+                SetTextPositionAndSize();
+                return;
         }
 
         base.ParseControlINIAttribute(iniFile, key, value);

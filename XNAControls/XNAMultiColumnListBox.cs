@@ -207,7 +207,7 @@ public class XNAMultiColumnListBox : XNAPanel
                 FontIndex = Conversions.IntFromString(value, FontIndex);
                 return;
             case "LineHeight":
-                LineHeight = Conversions.IntFromString(value, LineHeight);
+                LineHeight = Math.Max(1, Conversions.IntFromString(value, LineHeight));
                 return;
         }
 

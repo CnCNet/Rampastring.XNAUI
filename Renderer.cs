@@ -58,8 +58,7 @@ public static class Renderer
     public static List<IFont> GetFontList() => FontManager.GetFontList();
 
     /// <summary>
-    /// Returns a version of the given string where all characters that don't
-    /// appear in the given font have been replaced with question marks.
+    /// Returns a version of the given string that the font renderer can safely display without crashing.
     /// </summary>
     /// <param name="str">The string.</param>
     /// <param name="fontIndex">The index of the font.</param>
@@ -294,6 +293,12 @@ public static class Renderer
 
     public static Vector2 GetTextDimensions(string text, int fontIndex) =>
         FontManager.GetTextDimensions(text, fontIndex);
+
+    public static int GetTextYPadding(string text, int fontIndex, int containerHeight) =>
+        FontManager.GetTextYPadding(text, fontIndex, containerHeight);
+
+    public static int GetSingleLineTextYPadding(int fontIndex, int containerHeight) =>
+        FontManager.GetSingleLineTextYPadding(fontIndex, containerHeight);
 
     public static void DrawLine(Vector2 start, Vector2 end, Color color, int thickness = 1, float depth = 0f)
     {

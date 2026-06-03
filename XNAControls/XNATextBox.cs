@@ -20,7 +20,6 @@ public class XNATextBox : XNAControl
     protected const int TEXT_HORIZONTAL_MARGIN = 3;
     protected const int TEXT_VERTICAL_MARGIN = 2;
 
-    protected int TextDrawY => Math.Max(TEXT_VERTICAL_MARGIN, (Height - FontManager.GetFontVerticalCenteringValue(FontIndex)) / 2);
     protected const double CURSOR_SCROLL_REPEAT_TIME = 0.05;
     protected const double CURSOR_FAST_SCROLL_THRESHOLD = 20;
     protected const double BAR_ON_TIME = 0.5;
@@ -173,6 +172,8 @@ public class XNATextBox : XNAControl
 
     private string text = string.Empty;
     private string savedText = string.Empty;
+
+    private (char highSurrogate, int inputPosition)? handleCharInputSavedHighSurrogate = null;
 
     /// <summary>
     /// The input character index inside the textbox text.
@@ -527,12 +528,8 @@ public class XNATextBox : XNAControl
         if (char.IsControl(character))
             return;
 
-        // Don't allow typing characters that don't exist in the spritefont
-        if (Renderer.GetSafeString(character.ToString(), FontIndex) != character.ToString())
-        {
-            InputReceived?.Invoke(this, EventArgs.Empty);
-            return;
-        }
+        // Note: we do not check GetSafeString() here anymore. Consider a user typing a non-BMP character like `𰻞`, which consists of two surrogate chars.
+        // IME can only input one char at a time, so the user would first input the high surrogate char, which on its own is an invalid character that cannot be rendered and would be rejected if we checked GetSafeString() here.
 
         if (!AllowCharacterInput(character))
         {
@@ -540,9 +537,45 @@ public class XNATextBox : XNAControl
             return;
         }
 
+        string textToBeInserted;
+        if (char.IsLowSurrogate(character))
+        {
+            if (handleCharInputSavedHighSurrogate == null)
+            {
+                // A low surrogate char without a preceding high surrogate char is invalid. Reject it.
+                return;
+            }
+            else
+            {
+                (char savedHighSurrogate, int savedInputPosition) = handleCharInputSavedHighSurrogate.Value;
+
+                if (InputPosition != savedInputPosition)
+                {
+                    // The input position has changed since the high surrogate was saved. Reject the low surrogate.
+                    handleCharInputSavedHighSurrogate = null;
+                    return;
+                }
+
+                textToBeInserted = new string([savedHighSurrogate, character]);
+                handleCharInputSavedHighSurrogate = null;
+            }
+        }
+        else if (char.IsHighSurrogate(character))
+        {
+            // Save the high surrogate and do not modify the text.
+            handleCharInputSavedHighSurrogate = (character, InputPosition);
+
+            return;
+        }
+        else
+        {
+            textToBeInserted = character.ToString();
+            handleCharInputSavedHighSurrogate = null;
+        }
+
         if (!IsValidSelection())
         {
-            if (Text.Length >= MaximumTextLength)
+            if (Text.Length + textToBeInserted.Length > MaximumTextLength)
             {
                 InputReceived?.Invoke(this, EventArgs.Empty);
                 return;
@@ -550,8 +583,8 @@ public class XNATextBox : XNAControl
 
             InputPosition = EnsureCharacterBoundary(InputPosition);
 
-            text = text.Insert(InputPosition, character.ToString());
-            InputPosition++;
+            text = text.Insert(InputPosition, textToBeInserted);
+            InputPosition += textToBeInserted.Length;
 
             if (InputPosition > TextEndPosition)
             {
@@ -573,8 +606,14 @@ public class XNATextBox : XNAControl
         }
         else
         {
-            text = text.Substring(0, SelectionStartPosition) + character.ToString() + text.Substring(SelectionEndPosition);
-            InputPosition = SelectionStartPosition + 1;
+            if (text.Length - (SelectionEndPosition - SelectionStartPosition) + textToBeInserted.Length > MaximumTextLength)
+            {
+                InputReceived?.Invoke(this, EventArgs.Empty);
+                return;
+            }
+
+            text = text.Substring(0, SelectionStartPosition) + textToBeInserted + text.Substring(SelectionEndPosition);
+            InputPosition = SelectionStartPosition + textToBeInserted.Length;
             UnselectText();
 
             TextStartPosition = Math.Min(TextStartPosition, text.Length);
@@ -720,10 +759,9 @@ public class XNATextBox : XNAControl
                 if (clipboardText == null)
                     return true;
 
-                // Replace newlines with spaces, invalid font chars with ?
+                // Replace newlines with spaces
                 // https://stackoverflow.com/questions/238002/replace-line-breaks-in-a-string-c-sharp
                 string textToAdd = Regex.Replace(clipboardText, @"\r\n?|\n", " ");
-                textToAdd = Renderer.GetSafeString(textToAdd, FontIndex);
 
                 // Trim pasted text to fit MaximumTextLength
                 string fullText = text.Substring(0, InputPosition) + textToAdd + text.Substring(InputPosition);
@@ -1481,7 +1519,7 @@ public class XNATextBox : XNAControl
         if (safeStartPos < safeEndPos)
         {
             DrawStringWithShadow(Text.Substring(safeStartPos, safeEndPos - safeStartPos),
-                FontIndex, new Vector2(TEXT_HORIZONTAL_MARGIN, TextDrawY), TextColor);
+                FontIndex, new Vector2(TEXT_HORIZONTAL_MARGIN, Renderer.GetSingleLineTextYPadding(FontIndex, Height)), TextColor);
         }
 
         if (WindowManager.SelectedControl == this && Enabled && WindowManager.HasFocus)
@@ -1501,7 +1539,7 @@ public class XNATextBox : XNAControl
                 {
                     if (WindowManager.IMEHandler.GetDrawCompositionText(this, out string composition, out int compositionCursorPosition))
                     {
-                        DrawString(composition, FontIndex, new(barLocationX, TextDrawY), Color.Orange);
+                        DrawString(composition, FontIndex, new(barLocationX, Renderer.GetSingleLineTextYPadding(FontIndex, Height)), Color.Orange);
                         Vector2 measStr = FontManager.GetTextDimensions(composition.SubstringSurrogateAware(0, compositionCursorPosition), FontIndex);
                         barLocationX += (int)measStr.X;
                     }

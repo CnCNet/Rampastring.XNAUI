@@ -7,13 +7,9 @@ public interface IFont
 {
     Vector2 MeasureString(string text);
 
-    /// <summary>
-    /// Returns the value <c>V</c> to plug into <c>(controlHeight - V) / 2</c> for
-    /// vertical centering. This is NOT a geometric font height — it is the value
-    /// each implementation chooses so that the centering formula produces the
-    /// correct visual result for that font type.
-    /// </summary>
-    int GetVerticalCenteringValue();
+    int GetTextYPadding(int containerHeight, string text);
+    int GetSingleLineTextYPadding(int containerHeight);
+
     void DrawString(SpriteBatch spriteBatch, string text, Vector2 location, Color color, float scale, float depth);
     bool HasCharacter(char c);
     string GetSafeString(string str);

@@ -121,12 +121,7 @@ public static class FontManager
     /// - For SpriteFonts: Load the .xnb file
     /// </para>
     /// </remarks>
-    /// <param name="fontResolutionFactor">
-    /// When non-null, overrides any <c>FontResolutionFactor</c> from <c>[FontRendering]</c>
-    /// in <c>Fonts.ini</c>. Used by <see cref="Renderer.ReloadFontsForScale"/> to keep TTF
-    /// glyphs sharp when the render target is upscaled.
-    /// </param>
-    public static void LoadFonts(ContentManager contentManager, float? fontResolutionFactor = null)
+    public static void LoadFonts(ContentManager contentManager)
     {
         fonts ??= [];
         fonts.Clear();
@@ -153,19 +148,13 @@ public static class FontManager
                 if (File.Exists(iniPath))
                 {
                     Logger.Log($"FontManager: Loading fonts from {iniPath}");
-                    LoadFontsFromIni(iniPath, contentManager, searchPath, baseDir, fontResolutionFactor);
+                    LoadFontsFromIni(iniPath, contentManager, searchPath, baseDir);
                     fontsIniFound = true;
                     // Stop after first Fonts.ini found
                     break;
                 }
             }
         }
-
-        // Apply the resolution-factor override even when no Fonts.ini was found
-        // (legacy SpriteFont path), so callers like Renderer.ReloadFontsForScale
-        // still take effect.
-        if (!fontsIniFound && fontResolutionFactor.HasValue)
-            fontRenderingSettings.FontResolutionFactor = fontResolutionFactor.Value;
 
         // Fall back to legacy SpriteFont loading if no Fonts.ini found
         if (!fontsIniFound)
@@ -193,7 +182,7 @@ public static class FontManager
     /// <summary>
     /// Loads fonts from a specific Fonts.ini file.
     /// </summary>
-    private static void LoadFontsFromIni(string iniPath, ContentManager contentManager, string searchPath, string baseDir, float? fontResolutionFactorOverride = null)
+    private static void LoadFontsFromIni(string iniPath, ContentManager contentManager, string searchPath, string baseDir)
     {
         var iniFile = new IniFile(iniPath);
 
@@ -208,10 +197,6 @@ public static class FontManager
         {
             LoadFontRenderingSettings(iniFile);
         }
-
-        // Override after ini load so the runtime value wins
-        if (fontResolutionFactorOverride.HasValue)
-            fontRenderingSettings.FontResolutionFactor = fontResolutionFactorOverride.Value;
 
         CreateFontIndexesFromIni(iniFile, contentManager, searchPath, baseDir);
     }

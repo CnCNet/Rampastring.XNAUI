@@ -33,6 +33,7 @@ public struct SpriteBatchSettings
 public static class Renderer
 {
     private static SpriteBatch spriteBatch;
+    private static ContentManager contentManager;
 
     private static Texture2D whitePixelTexture;
 
@@ -45,11 +46,24 @@ public static class Renderer
     public static void Initialize(GraphicsDevice gd, ContentManager content)
     {
         spriteBatch = new SpriteBatch(gd);
+        contentManager = content;
 
         FontManager.Initialize();
         FontManager.LoadFonts(content);
 
         whitePixelTexture = AssetLoader.CreateTexture(Color.White, 1, 1);
+    }
+
+    /// <summary>
+    /// Reloads TTF fonts when the final display scale needs a higher-resolution
+    /// glyph atlas. A higher factor explicitly configured in Fonts.ini is retained.
+    /// </summary>
+    internal static void ReloadFontsForScale(float scaleRatio)
+    {
+        if (contentManager == null)
+            return;
+
+        FontManager.LoadFonts(contentManager, Math.Max(1f, scaleRatio));
     }
 
     /// <summary>

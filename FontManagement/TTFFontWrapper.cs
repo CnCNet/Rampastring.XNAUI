@@ -45,13 +45,7 @@ public class TTFFontWrapper : IFont
 
         text = GetSafeString(text);
 
-        // Route through our pixel-snapping renderer so each glyph lands on integer
-        // destination pixels instead of inheriting FontStashSharp's accumulated fractional
-        // X advances. Combined with the scene's PointClamp sampler and FontResolutionFactor=1,
-        // this keeps glyphs crisp and consistent (avoids the "two B's look different" effect).
-        var renderer = PixelSnapFontRenderer.Instance;
-        renderer.Batch = spriteBatch;
-        _font.DrawText(renderer, text, location, color, 0f, Vector2.Zero, vectorScale, depth);
+        spriteBatch.DrawString(_font, text, location, color, 0f, Vector2.Zero, vectorScale, depth);
     }
 
     /// <summary>

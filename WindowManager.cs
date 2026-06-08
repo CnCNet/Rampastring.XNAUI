@@ -171,16 +171,7 @@ public class WindowManager : DrawableGameComponent
 
     private IGameWindowManager gameWindowManager;
     private RenderTarget2D renderTarget;
-
-    /// <summary>
-    /// Optional intermediate target used at non-integer scale ratios: the scene is first
-    /// point-upscaled into it by <see cref="superSampleFactor"/> (crisp integer scaling),
-    /// then bilinearly minified to the exact window size on the final blit. This avoids the
-    /// soft look of a direct fractional upscale. Null when not needed (integer scaling, or
-    /// the supersampled size would exceed the texture limit).
-    /// </summary>
-    private RenderTarget2D superSampledRenderTarget;
-    private int superSampleFactor = 1;
+    private float lastFontScaleRatio = 1f;
 
     /// <summary>
     /// Sets the rendering (back buffer) resolution of the game.
@@ -257,40 +248,17 @@ public class WindowManager : DrawableGameComponent
         if (renderTarget != null && !renderTarget.IsDisposed)
             renderTarget.Dispose();
 
-        if (superSampledRenderTarget != null && !superSampledRenderTarget.IsDisposed)
-            superSampledRenderTarget.Dispose();
-        superSampledRenderTarget = null;
-        superSampleFactor = 1;
-
         renderTarget = new RenderTarget2D(GraphicsDevice, RenderResolutionX, RenderResolutionY, false, SurfaceFormat.Color,
             DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
 
         RenderTargetStack.Initialize(renderTarget, GraphicsDevice);
         RenderTargetStack.InitDetachedScaledControlRenderTarget(RenderResolutionX, RenderResolutionY);
 
-        // At a non-integer scale ratio the final blit would upscale the render-resolution
-        // scene by a fractional factor with bilinear filtering, softening the otherwise
-        // pixel-crisp UI and text. Mitigate it: point-upscale the scene by the next integer
-        // factor first (stays crisp), then minify that down to the exact window size. Costs an
-        // extra render target of factor^2 * render-resolution pixels.
-        if (ScaleRatio > 1.0 && ScaleRatio % 1.0 != 0)
+        float fontScaleRatio = (float)Math.Max(1.0, ScaleRatio);
+        if (Math.Abs(fontScaleRatio - lastFontScaleRatio) > 0.001f)
         {
-            int factor = (int)Math.Ceiling(ScaleRatio);
-            int ssWidth = RenderResolutionX * factor;
-            int ssHeight = RenderResolutionY * factor;
-
-#if XNA
-            int maxRenderTargetDimension = XNA_MAX_TEXTURE_SIZE;
-#else
-            int maxRenderTargetDimension = GraphicsDevice.GraphicsProfile == GraphicsProfile.HiDef ? 4096 : 2048;
-#endif
-
-            if (ssWidth <= maxRenderTargetDimension && ssHeight <= maxRenderTargetDimension)
-            {
-                superSampleFactor = factor;
-                superSampledRenderTarget = new RenderTarget2D(GraphicsDevice, ssWidth, ssHeight, false,
-                    SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
-            }
+            lastFontScaleRatio = fontScaleRatio;
+            Renderer.ReloadFontsForScale(fontScaleRatio);
         }
     }
 
@@ -920,11 +888,8 @@ public class WindowManager : DrawableGameComponent
         GraphicsDevice.Clear(Color.Black);
 
         Renderer.ClearStack();
-        // PointClamp so glyph textures (snapped to integer positions by PixelSnapFontRenderer)
-        // are copied texel-for-texel into the render target instead of being bilinearly
-        // softened. Non-text sprites are drawn 1:1 here, so point sampling is equivalent for them.
         Renderer.CurrentSettings = new SpriteBatchSettings(
-            SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null);
+            SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, null, null, null);
         Renderer.BeginDraw();
 
         for (int i = 0; i < Controls.Count; i++)
@@ -936,19 +901,6 @@ public class WindowManager : DrawableGameComponent
         }
 
         Renderer.EndDraw();
-
-        if (superSampledRenderTarget != null)
-        {
-            GraphicsDevice.SetRenderTarget(superSampledRenderTarget);
-            GraphicsDevice.Clear(Color.Black);
-            // PointClamp: an exact integer upscale, so the scene stays pixel-crisp here.
-            Renderer.CurrentSettings = new SpriteBatchSettings(SpriteSortMode.Deferred,
-                BlendState.NonPremultiplied, SamplerState.PointClamp, null, null, null);
-            Renderer.BeginDraw();
-            Renderer.DrawTexture(renderTarget, new Rectangle(0, 0,
-                RenderResolutionX * superSampleFactor, RenderResolutionY * superSampleFactor), Color.White);
-            Renderer.EndDraw();
-        }
 
         GraphicsDevice.SetRenderTarget(null);
 
@@ -969,9 +921,7 @@ public class WindowManager : DrawableGameComponent
                 BlendState.NonPremultiplied, scalingSamplerState, null, null, null);
         Renderer.BeginDraw();
 
-        RenderTarget2D renderTargetToDraw = superSampledRenderTarget ?? renderTarget;
-
-        Renderer.DrawTexture(renderTargetToDraw, new Rectangle(SceneXPosition, SceneYPosition,
+        Renderer.DrawTexture(renderTarget, new Rectangle(SceneXPosition, SceneYPosition,
             Game.Window.ClientBounds.Width - (SceneXPosition * 2), Game.Window.ClientBounds.Height - (SceneYPosition * 2)), Color.White);
 
 #if DEBUG

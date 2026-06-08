@@ -121,7 +121,12 @@ public static class FontManager
     /// - For SpriteFonts: Load the .xnb file
     /// </para>
     /// </remarks>
-    public static void LoadFonts(ContentManager contentManager)
+    /// <param name="contentManager">Content manager used to load SpriteFont assets.</param>
+    /// <param name="minimumFontResolutionFactor">
+    /// Optional minimum rasterization factor required by the display scale. The value
+    /// configured in <c>Fonts.ini</c> is preserved when it is higher.
+    /// </param>
+    public static void LoadFonts(ContentManager contentManager, float? minimumFontResolutionFactor = null)
     {
         fonts ??= [];
         fonts.Clear();
@@ -148,13 +153,17 @@ public static class FontManager
                 if (File.Exists(iniPath))
                 {
                     Logger.Log($"FontManager: Loading fonts from {iniPath}");
-                    LoadFontsFromIni(iniPath, contentManager, searchPath, baseDir);
+                    LoadFontsFromIni(iniPath, contentManager, searchPath, baseDir, minimumFontResolutionFactor);
                     fontsIniFound = true;
                     // Stop after first Fonts.ini found
                     break;
                 }
             }
         }
+
+        if (!fontsIniFound && minimumFontResolutionFactor.HasValue)
+            fontRenderingSettings.FontResolutionFactor =
+                Math.Max(fontRenderingSettings.FontResolutionFactor, minimumFontResolutionFactor.Value);
 
         // Fall back to legacy SpriteFont loading if no Fonts.ini found
         if (!fontsIniFound)
@@ -182,7 +191,8 @@ public static class FontManager
     /// <summary>
     /// Loads fonts from a specific Fonts.ini file.
     /// </summary>
-    private static void LoadFontsFromIni(string iniPath, ContentManager contentManager, string searchPath, string baseDir)
+    private static void LoadFontsFromIni(string iniPath, ContentManager contentManager, string searchPath, string baseDir,
+        float? minimumFontResolutionFactor)
     {
         var iniFile = new IniFile(iniPath);
 
@@ -197,6 +207,10 @@ public static class FontManager
         {
             LoadFontRenderingSettings(iniFile);
         }
+
+        if (minimumFontResolutionFactor.HasValue)
+            fontRenderingSettings.FontResolutionFactor =
+                Math.Max(fontRenderingSettings.FontResolutionFactor, minimumFontResolutionFactor.Value);
 
         CreateFontIndexesFromIni(iniFile, contentManager, searchPath, baseDir);
     }

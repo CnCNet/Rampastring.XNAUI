@@ -743,6 +743,7 @@ public class XNATextBox : XNAControl
                 }
                 catch (Exception)
                 {
+                    return true;
                 }
 
                 int newInputPosition = SelectionStartPosition;

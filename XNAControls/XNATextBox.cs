@@ -744,6 +744,7 @@ public class XNATextBox : XNAControl
                 catch (Exception)
                 {
                 }
+
                 int newInputPosition = SelectionStartPosition;
                 Text = text.Substring(0, SelectionStartPosition) + text.Substring(SelectionEndPosition);
                 InputPosition = newInputPosition;

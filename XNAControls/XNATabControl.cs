@@ -20,7 +20,7 @@ public class XNATabControl : XNAControl
     public delegate void SelectedIndexChangedEventHandler(object sender, EventArgs e);
     public event SelectedIndexChangedEventHandler SelectedIndexChanged;
 
-    private int _selectedTab = 0;
+    private int _selectedTab = -1;
 
     public int SelectedTab
     {

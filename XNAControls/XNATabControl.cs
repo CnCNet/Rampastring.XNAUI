@@ -88,15 +88,15 @@ public class XNATabControl : XNAControl
 
     public void RemoveTab(int index)
     {
+        if (index < 0 || index >= Tabs.Count)
+            throw new ArgumentOutOfRangeException(nameof(index), "Tab index is out of range. Got " + index + ", but the tab count is " + Tabs.Count);
+
         if (DisposeTexturesOnTabRemove)
         {
             Tabs[index].DefaultTexture.Dispose();
             Tabs[index].PressedTexture.Dispose();
         }
 
-        if (index < 0 || index >= Tabs.Count)
-            throw new ArgumentOutOfRangeException(nameof(index), "Tab index is out of range. Got " + index + ", but the tab count is " + Tabs.Count);
-        
         // Handle the selected tab index when a tab is removed
         if (index == _selectedTab)
         {
@@ -162,7 +162,7 @@ public class XNATabControl : XNAControl
         if (Tabs.Count == 0)
         {
             tab.Selected = true;
-            _selectedTab = 0;            
+            _selectedTab = 0;
         }
 
         if (onSelected != null)

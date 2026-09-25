@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Rampastring.Tools;
-using Rampastring.XNAUI.FontManagement;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -18,21 +17,34 @@ public class XNATabControl : XNAControl
     }
 
     public delegate void SelectedIndexChangedEventHandler(object sender, EventArgs e);
+
+    [Obsolete("XNATabControl supports removing a tab via an INI configuration `RemoveTabIndex{id}`. Therefore, it is not reliable to use this event to determine the selected tab index. Use the callback methods in AddTab() instead.")]
     public event SelectedIndexChangedEventHandler SelectedIndexChanged;
 
-    private int _selectedTab = 0;
+    private int _selectedTab = -1;
+
+    [Obsolete("XNATabControl supports removing a tab via an INI configuration `RemoveTabIndex{id}`. Therefore, it is not reliable to use this property to determine the selected tab index.")]
     public int SelectedTab
     {
         get { return _selectedTab; }
-        set
-        {
-            if (_selectedTab == value)
-                return;
+        set => SetSelectedTab(value);
+    }
 
-            _selectedTab = value;
+    private void SetSelectedTab(int value)
+    {
+        if (_selectedTab == value)
+            return;
 
-            SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
-        }
+        int oldSelectedTab = _selectedTab;
+        _selectedTab = value;
+
+        if (oldSelectedTab >= 0 && oldSelectedTab < Tabs.Count)
+            Tabs[oldSelectedTab].Selected = false;
+
+        if (value >= 0 && value < Tabs.Count)
+            Tabs[value].Selected = true;
+
+        SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public int FontIndex { get; set; }
@@ -76,30 +88,67 @@ public class XNATabControl : XNAControl
 
     public void RemoveTab(int index)
     {
+        if (index < 0 || index >= Tabs.Count)
+            throw new ArgumentOutOfRangeException(nameof(index), "Tab index is out of range. Got " + index + ", but the tab count is " + Tabs.Count);
+
         if (DisposeTexturesOnTabRemove)
         {
             Tabs[index].DefaultTexture.Dispose();
             Tabs[index].PressedTexture.Dispose();
         }
 
+        // Handle the selected tab index when a tab is removed
+        bool selectedTabRemoved = index == _selectedTab;
+        if (selectedTabRemoved)
+        {
+            Tabs[index].Selected = false;
+            _selectedTab = -1;
+        }
+        else if (index < _selectedTab)
+        {
+            _selectedTab--;
+        }
+
         Tabs.RemoveAt(index);
+
+        if (selectedTabRemoved && Tabs.Count > 0)
+            SetSelectedTab(0);
     }
 
     public void RemoveTab(string text)
     {
         int index = Tabs.FindIndex(t => t.Text == text);
 
-        Tabs.RemoveAt(index);
+        if (index == -1)
+            throw new ArgumentException("No tab with the specified text exists.", nameof(text));
+
+        RemoveTab(index);
     }
 
-    public void AddTab(string text, Texture2D defaultTexture, Texture2D pressedTexture)
-    {
-        AddTab(text, defaultTexture, pressedTexture, true);
-    }
-
-    public void AddTab(string text, Texture2D defaultTexture, Texture2D pressedTexture, bool selectable)
+    /// <summary>
+    /// Adds a tab to the control.
+    /// </summary>
+    /// <param name="text">The tab header text.</param>
+    /// <param name="defaultTexture">The texture to use when the tab is not selected.</param>
+    /// <param name="pressedTexture">The texture to use when the tab is selected.</param>
+    /// <param name="selectable">Whether the tab can be selected or not.</param>
+    /// <param name="onSelected">A callback method that is called when the tab is selected. Note: if this is the first tab added to the control, it will be selected by default but this callback will NOT be called.</param>
+    /// <param name="onDeselected">A callback method that is called when the tab is deselected.</param>
+    public void AddTab(string text, Texture2D defaultTexture, Texture2D pressedTexture, bool selectable = true, Action onSelected = null, Action onDeselected = null)
     {
         var tab = new Tab(text, defaultTexture, pressedTexture, selectable);
+        if (Tabs.Count == 0)
+        {
+            tab.Selected = true;
+            _selectedTab = 0;
+        }
+
+        if (onSelected != null)
+            tab.TabSelected += (s, e) => onSelected();
+
+        if (onDeselected != null)
+            tab.TabDeselected += (s, e) => onDeselected();
+
         Tabs.Add(tab);
 
         Vector2 textSize = Renderer.GetTextDimensions(text, FontIndex);
@@ -153,7 +202,7 @@ public class XNATabControl : XNAControl
                 {
                     ClickSound?.Play();
 
-                    SelectedTab = i;
+                    SetSelectedTab(i);
                 }
 
                 return;
@@ -171,7 +220,7 @@ public class XNATabControl : XNAControl
         {
             Tab tab = Tabs[i];
 
-            Texture2D texture = i == SelectedTab ? tab.PressedTexture : tab.DefaultTexture;
+            Texture2D texture = i == _selectedTab ? tab.PressedTexture : tab.DefaultTexture;
 
             DrawTexture(texture, new Point(x, 0), RemapColor);
 
@@ -204,7 +253,27 @@ internal class Tab
 
     public bool Selectable { get; set; }
 
+    private bool _selected;
+    public bool Selected
+    {
+        get => _selected;
+        set
+        {
+            bool previousSelected = _selected;
+            _selected = value;
+
+            if (!previousSelected && _selected)
+                TabSelected?.Invoke(this, EventArgs.Empty);
+            else if (previousSelected && !_selected)
+                TabDeselected?.Invoke(this, EventArgs.Empty);
+        }
+
+    }
+
     public int TextXPosition { get; set; }
 
     public int TextYPosition { get; set; }
+
+    public event EventHandler TabSelected;
+    public event EventHandler TabDeselected;
 }

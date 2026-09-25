@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Rampastring.Tools;
-using Rampastring.XNAUI.FontManagement;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -18,21 +17,34 @@ public class XNATabControl : XNAControl
     }
 
     public delegate void SelectedIndexChangedEventHandler(object sender, EventArgs e);
+
+    [Obsolete("XNATabControl supports removing a tab via an INI configuration `RemoveTabIndex{id}`. Therefore, it is not reliable to use this event to determine the selected tab index. Use the callback methods in AddTab() instead.")]
     public event SelectedIndexChangedEventHandler SelectedIndexChanged;
 
     private int _selectedTab = 0;
+
+    [Obsolete("XNATabControl supports removing a tab via an INI configuration `RemoveTabIndex{id}`. Therefore, it is not reliable to use this property to determine the selected tab index.")]
     public int SelectedTab
     {
         get { return _selectedTab; }
-        set
-        {
-            if (_selectedTab == value)
-                return;
+        set => SetSelectedTab(value);
+    }
 
-            _selectedTab = value;
+    private void SetSelectedTab(int value)
+    {
+        if (_selectedTab == value)
+            return;
 
-            SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
-        }
+        int oldSelectedTab = _selectedTab;
+        _selectedTab = value;
+
+        if (oldSelectedTab >= 0 && oldSelectedTab < Tabs.Count)
+            Tabs[oldSelectedTab].Selected = false;
+
+        if (value >= 0 && value < Tabs.Count)
+            Tabs[value].Selected = true;
+
+        SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public int FontIndex { get; set; }
@@ -94,12 +106,24 @@ public class XNATabControl : XNAControl
 
     public void AddTab(string text, Texture2D defaultTexture, Texture2D pressedTexture)
     {
-        AddTab(text, defaultTexture, pressedTexture, true);
+        AddTab(text, defaultTexture, pressedTexture, true, null, null);
     }
 
     public void AddTab(string text, Texture2D defaultTexture, Texture2D pressedTexture, bool selectable)
     {
+
+        AddTab(text, defaultTexture, pressedTexture, selectable, null, null);
+    }
+
+    public void AddTab(string text, Texture2D defaultTexture, Texture2D pressedTexture, bool selectable = true, Action onSelected = null, Action onDeselected = null)
+    {
         var tab = new Tab(text, defaultTexture, pressedTexture, selectable);
+        if (onSelected != null)
+            tab.TabSelected += (s, e) => onSelected();
+
+        if (onDeselected != null)
+            tab.TabDeselected += (s, e) => onDeselected();
+
         Tabs.Add(tab);
 
         Vector2 textSize = Renderer.GetTextDimensions(text, FontIndex);
@@ -153,7 +177,7 @@ public class XNATabControl : XNAControl
                 {
                     ClickSound?.Play();
 
-                    SelectedTab = i;
+                    SetSelectedTab(i);
                 }
 
                 return;
@@ -171,7 +195,7 @@ public class XNATabControl : XNAControl
         {
             Tab tab = Tabs[i];
 
-            Texture2D texture = i == SelectedTab ? tab.PressedTexture : tab.DefaultTexture;
+            Texture2D texture = i == _selectedTab ? tab.PressedTexture : tab.DefaultTexture;
 
             DrawTexture(texture, new Point(x, 0), RemapColor);
 
@@ -204,7 +228,27 @@ internal class Tab
 
     public bool Selectable { get; set; }
 
+    private bool _selected;
+    public bool Selected
+    {
+        get => _selected;
+        set
+        {
+            bool previousSelected = _selected;
+            value = _selected;
+
+            if (!previousSelected && _selected)
+                TabSelected?.Invoke(this, EventArgs.Empty);
+            else if (previousSelected && !_selected)
+                TabDeselected?.Invoke(this, EventArgs.Empty);
+        }
+
+    }
+
     public int TextXPosition { get; set; }
 
     public int TextYPosition { get; set; }
+
+    public event EventHandler TabSelected;
+    public event EventHandler TabDeselected;
 }

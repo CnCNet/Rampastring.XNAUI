@@ -20,16 +20,19 @@ public class XNATabControl : XNAControl
     public delegate void SelectedIndexChangedEventHandler(object sender, EventArgs e);
     public event SelectedIndexChangedEventHandler SelectedIndexChanged;
 
-    private int _selectedTab = 0;
+    private int _selectedTab = -1;
+
     public int SelectedTab
     {
         get { return _selectedTab; }
         set
         {
-            if (_selectedTab == value)
+            int resolvedPublicIndex = ResolvePublicIndex(value);
+
+            if (_selectedTab == resolvedPublicIndex)
                 return;
 
-            _selectedTab = value;
+            _selectedTab = resolvedPublicIndex;
 
             SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -57,6 +60,19 @@ public class XNATabControl : XNAControl
 
     private List<Tab> Tabs = new List<Tab>();
 
+    /// <summary>
+    /// Maps a public tab index (stable identity used by applications and INI)
+    /// to the current internal index in <see cref="Tabs"/>.
+    /// </summary>
+    private readonly Dictionary<int, int> _publicToInternalIndex = new Dictionary<int, int>();
+
+    /// <summary>
+    /// Maps an internal tab index in <see cref="Tabs"/> to the public tab index.
+    /// </summary>
+    private readonly Dictionary<int, int> _internalToPublicIndex = new Dictionary<int, int>();
+
+    private int _nextPublicIndex = 0;
+
     public EnhancedSoundEffect ClickSound { get; set; }
 
     public override void Initialize()
@@ -66,30 +82,41 @@ public class XNATabControl : XNAControl
 
     public void MakeSelectable(int index)
     {
-        Tabs[index].Selectable = true;
+        int internalIndex = GetInternalIndex(index);
+        if (internalIndex < 0)
+            return;
+
+        Tabs[internalIndex].Selectable = true;
     }
 
     public void MakeUnselectable(int index)
     {
-        Tabs[index].Selectable = false;
+        int internalIndex = GetInternalIndex(index);
+        if (internalIndex < 0)
+            return;
+
+        Tabs[internalIndex].Selectable = false;
     }
 
+    /// <summary>
+    /// Removes the tab identified by the given tab index.
+    /// </summary>
     public void RemoveTab(int index)
     {
-        if (DisposeTexturesOnTabRemove)
-        {
-            Tabs[index].DefaultTexture.Dispose();
-            Tabs[index].PressedTexture.Dispose();
-        }
+        int internalIndex = GetInternalIndex(index);
+        if (internalIndex < 0)
+            return;
 
-        Tabs.RemoveAt(index);
+        RemoveTabAtInternalIndex(internalIndex);
     }
 
     public void RemoveTab(string text)
     {
-        int index = Tabs.FindIndex(t => t.Text == text);
+        int internalIndex = Tabs.FindIndex(t => t.Text == text);
+        if (internalIndex < 0)
+            return;
 
-        Tabs.RemoveAt(index);
+        RemoveTabAtInternalIndex(internalIndex);
     }
 
     public void AddTab(string text, Texture2D defaultTexture, Texture2D pressedTexture)
@@ -100,7 +127,9 @@ public class XNATabControl : XNAControl
     public void AddTab(string text, Texture2D defaultTexture, Texture2D pressedTexture, bool selectable)
     {
         var tab = new Tab(text, defaultTexture, pressedTexture, selectable);
+        tab.Index = _nextPublicIndex++;
         Tabs.Add(tab);
+        RebuildIndexMaps();
 
         Vector2 textSize = Renderer.GetTextDimensions(text, FontIndex);
         tab.TextXPosition = (defaultTexture.Width - (int)textSize.X) / 2;
@@ -108,6 +137,9 @@ public class XNATabControl : XNAControl
 
         Width += defaultTexture.Width;
         Height = defaultTexture.Height;
+
+        if (_selectedTab < 0)
+            SelectedTab = tab.Index;
     }
 
     protected override void ParseControlINIAttribute(IniFile iniFile, string key, string value)
@@ -142,7 +174,7 @@ public class XNATabControl : XNAControl
         Point p = GetCursorPoint();
 
         int w = 0;
-        int i = 0;
+        int internalIndex = 0;
         foreach (Tab tab in Tabs)
         {
             w += tab.DefaultTexture.Width;
@@ -153,13 +185,13 @@ public class XNATabControl : XNAControl
                 {
                     ClickSound?.Play();
 
-                    SelectedTab = i;
+                    SelectedTab = _internalToPublicIndex[internalIndex];
                 }
 
                 return;
             }
 
-            i++;
+            internalIndex++;
         }
     }
 
@@ -171,7 +203,7 @@ public class XNATabControl : XNAControl
         {
             Tab tab = Tabs[i];
 
-            Texture2D texture = i == SelectedTab ? tab.PressedTexture : tab.DefaultTexture;
+            Texture2D texture = _internalToPublicIndex[i] == SelectedTab ? tab.PressedTexture : tab.DefaultTexture;
 
             DrawTexture(texture, new Point(x, 0), RemapColor);
 
@@ -181,6 +213,69 @@ public class XNATabControl : XNAControl
 
             x += tab.DefaultTexture.Width;
         }
+    }
+
+    private void RemoveTabAtInternalIndex(int internalIndex)
+    {
+        int removedPublicIndex = Tabs[internalIndex].Index;
+        bool removedSelectedTab = _selectedTab == removedPublicIndex;
+
+        if (DisposeTexturesOnTabRemove)
+        {
+            Tabs[internalIndex].DefaultTexture.Dispose();
+            Tabs[internalIndex].PressedTexture.Dispose();
+        }
+
+        Tabs.RemoveAt(internalIndex);
+        RebuildIndexMaps();
+
+        if (removedSelectedTab)
+            SelectedTab = GetFirstAvailablePublicIndex();
+    }
+
+    private void RebuildIndexMaps()
+    {
+        _publicToInternalIndex.Clear();
+        _internalToPublicIndex.Clear();
+
+        for (int internalIndex = 0; internalIndex < Tabs.Count; internalIndex++)
+        {
+            int publicIndex = Tabs[internalIndex].Index;
+            _publicToInternalIndex[publicIndex] = internalIndex;
+            _internalToPublicIndex[internalIndex] = publicIndex;
+        }
+    }
+
+    /// <summary>
+    /// Resolves a requested public index to a currently available public index.
+    /// A removed public index maps to the first remaining tab, or -1 if none remain.
+    /// </summary>
+    private int ResolvePublicIndex(int publicIndex)
+    {
+        if (publicIndex >= 0 && _publicToInternalIndex.ContainsKey(publicIndex))
+            return publicIndex;
+
+        return GetFirstAvailablePublicIndex();
+    }
+
+    private int GetFirstAvailablePublicIndex()
+    {
+        if (Tabs.Count == 0)
+            return -1;
+
+        return Tabs[0].Index;
+    }
+
+    /// <summary>
+    /// Returns the internal list index for a tab index, or -1 if the
+    /// index has been removed or was never assigned.
+    /// </summary>
+    private int GetInternalIndex(int publicIndex)
+    {
+        if (_publicToInternalIndex.TryGetValue(publicIndex, out int internalIndex))
+            return internalIndex;
+
+        return -1;
     }
 }
 
@@ -207,4 +302,9 @@ internal class Tab
     public int TextXPosition { get; set; }
 
     public int TextYPosition { get; set; }
+
+    /// <summary>
+    /// The index assigned when the tab is added, i.e. the public index.
+    /// </summary>
+    public int Index { get; set; }
 }

@@ -21,7 +21,7 @@ public class XNATabControl : XNAControl
     [Obsolete("XNATabControl supports removing a tab via an INI configuration `RemoveTabIndex{id}`. Therefore, it is not reliable to use this event to determine the selected tab index. Use the callback methods in AddTab() instead.")]
     public event SelectedIndexChangedEventHandler SelectedIndexChanged;
 
-    private int _selectedTab = 0;
+    private int _selectedTab = -1;
 
     [Obsolete("XNATabControl supports removing a tab via an INI configuration `RemoveTabIndex{id}`. Therefore, it is not reliable to use this property to determine the selected tab index.")]
     public int SelectedTab
@@ -94,6 +94,22 @@ public class XNATabControl : XNAControl
             Tabs[index].PressedTexture.Dispose();
         }
 
+        if (index < 0 || index >= Tabs.Count)
+            throw new ArgumentOutOfRangeException(nameof(index), "Tab index is out of range. Got " + index + ", but the tab count is " + Tabs.Count);
+        
+        // Handle the selected tab index when a tab is removed
+        if (index == _selectedTab)
+        {
+            if (Tabs.Count >= 2)
+                SetSelectedTab(0);
+            else
+                _selectedTab = -1;
+        }
+        else if (index < _selectedTab)
+        {
+            _selectedTab--;
+        }
+
         Tabs.RemoveAt(index);
     }
 
@@ -101,23 +117,54 @@ public class XNATabControl : XNAControl
     {
         int index = Tabs.FindIndex(t => t.Text == text);
 
-        Tabs.RemoveAt(index);
+        if (index == -1)
+            throw new ArgumentException("No tab with the specified text exists.", nameof(text));
+
+        RemoveTab(index);
     }
 
+    /// <summary>
+    /// Adds a tab to the control.
+    /// </summary>
+    /// <param name="text">The tab header text.</param>
+    /// <param name="defaultTexture">The texture to use when the tab is not selected.</param>
+    /// <param name="pressedTexture">The texture to use when the tab is selected.</param>
     public void AddTab(string text, Texture2D defaultTexture, Texture2D pressedTexture)
     {
         AddTab(text, defaultTexture, pressedTexture, true, null, null);
     }
 
+    /// <summary>
+    /// Adds a tab to the control.
+    /// </summary>
+    /// <param name="text">The tab header text.</param>
+    /// <param name="defaultTexture">The texture to use when the tab is not selected.</param>
+    /// <param name="pressedTexture">The texture to use when the tab is selected.</param>
+    /// <param name="selectable">Whether the tab can be selected or not.</param>
     public void AddTab(string text, Texture2D defaultTexture, Texture2D pressedTexture, bool selectable)
     {
 
         AddTab(text, defaultTexture, pressedTexture, selectable, null, null);
     }
 
+    /// <summary>
+    /// Adds a tab to the control.
+    /// </summary>
+    /// <param name="text">The tab header text.</param>
+    /// <param name="defaultTexture">The texture to use when the tab is not selected.</param>
+    /// <param name="pressedTexture">The texture to use when the tab is selected.</param>
+    /// <param name="selectable">Whether the tab can be selected or not.</param>
+    /// <param name="onSelected">A callback method that is called when the tab is selected. Note: if this is the first tab added to the control, it will be selected by default but this callback will NOT be called.</param>
+    /// <param name="onDeselected">A callback method that is called when the tab is deselected.</param>
     public void AddTab(string text, Texture2D defaultTexture, Texture2D pressedTexture, bool selectable = true, Action onSelected = null, Action onDeselected = null)
     {
         var tab = new Tab(text, defaultTexture, pressedTexture, selectable);
+        if (Tabs.Count == 0)
+        {
+            tab.Selected = true;
+            _selectedTab = 0;            
+        }
+
         if (onSelected != null)
             tab.TabSelected += (s, e) => onSelected();
 

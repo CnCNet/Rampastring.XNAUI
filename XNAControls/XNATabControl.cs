@@ -98,12 +98,11 @@ public class XNATabControl : XNAControl
             throw new ArgumentOutOfRangeException(nameof(index), "Tab index is out of range. Got " + index + ", but the tab count is " + Tabs.Count);
         
         // Handle the selected tab index when a tab is removed
-        if (index == _selectedTab)
+        bool selectedTabRemoved = index == _selectedTab;
+        if (selectedTabRemoved)
         {
-            if (Tabs.Count >= 2)
-                SetSelectedTab(0);
-            else
-                _selectedTab = -1;
+            Tabs[index].Selected = false;
+            _selectedTab = -1;
         }
         else if (index < _selectedTab)
         {
@@ -111,6 +110,9 @@ public class XNATabControl : XNAControl
         }
 
         Tabs.RemoveAt(index);
+
+        if (selectedTabRemoved && Tabs.Count > 0)
+            SetSelectedTab(0);
     }
 
     public void RemoveTab(string text)

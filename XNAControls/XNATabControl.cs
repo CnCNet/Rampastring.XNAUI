@@ -235,7 +235,7 @@ internal class Tab
         set
         {
             bool previousSelected = _selected;
-            value = _selected;
+            _selected = value;
 
             if (!previousSelected && _selected)
                 TabSelected?.Invoke(this, EventArgs.Empty);

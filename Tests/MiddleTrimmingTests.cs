@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Xna.Framework;
@@ -45,10 +46,65 @@ public class MiddleTrimmingTests
     public void NullInputIsRejected() => Assert.ThrowsExactly<ArgumentNullException>(() => Trim(null!, 10));
 
     [TestMethod]
-    public void InvalidFontIsRejected()
+    [DataRow(-1)]
+    [DataRow(1)]
+    [DataRow(int.MaxValue)]
+    public void InvalidFontIsRejected(int fontIndex) =>
+        Assert.ThrowsExactly<IndexOutOfRangeException>(() => Renderer.GetStringWithLimitedWidthTrimMiddle("abc", fontIndex, 10));
+
+    [TestMethod]
+    public void EmptyFontListIsRejected()
     {
         FontManager.GetFontList().Clear();
         Assert.ThrowsExactly<IndexOutOfRangeException>(() => Trim("abc", 10));
+    }
+
+    [TestMethod]
+    [DataRow(int.MinValue, "")]
+    [DataRow(int.MaxValue, "long-filename.map")]
+    public void ExtremeWidthsAreHandled(int width, string expected) => Assert.AreEqual(expected, Trim("long-filename.map", width));
+
+    [TestMethod]
+    [DataRow("👩‍💻")]
+    [DataRow("👍🏽")]
+    [DataRow("🇨🇦")]
+    public void OneTextElementIsNotSplitToFit(string text) => Assert.AreEqual("...", Trim(text, 3));
+
+    [TestMethod]
+    public void CombiningAndEmojiBoundariesArePreserved()
+    {
+        string text = "A👩‍💻👍🏽🇨🇦e\u0301Z";
+        var boundaries = new HashSet<int> { 0, 1, 6, 10, 14, 16, 17 };
+        for (int width = 0; width < text.Length; width++)
+        {
+            string result = Trim(text, width);
+            if (result.Length == 0)
+                continue;
+
+            int split = result.IndexOf("...", StringComparison.Ordinal);
+            Assert.IsTrue(split >= 0);
+            Assert.IsTrue(boundaries.Contains(split));
+            Assert.IsTrue(boundaries.Contains(text.Length - (result.Length - split - 3)));
+        }
+    }
+
+    [TestMethod]
+    public void SelectedFontControlsTheWidth()
+    {
+        FontManager.GetFontList().Add(new MeasuringFont(text => text.Length * 2));
+        Assert.AreEqual("a...z", Renderer.GetStringWithLimitedWidthTrimMiddle("abcdefghijkuvwxyz", 1, 10));
+        Assert.AreEqual("abcd...xyz", Trim("abcdefghijkuvwxyz", 10));
+    }
+
+    [TestMethod]
+    public void TrimmingAnAlreadyFittedResultIsIdempotent()
+    {
+        string text = "Current file: Maps/Custom/" + new string('W', 150) + "_original.map";
+        for (int width = 0; width < text.Length; width++)
+        {
+            string result = Trim(text, width);
+            Assert.AreEqual(result, Trim(result, width));
+        }
     }
 
     [TestMethod]

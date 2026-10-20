@@ -528,6 +528,54 @@ public static class FontManager
         return str.SubstringSurrogateAware(0, low);
     }
 
+    /// <summary>
+    /// Replaces the middle of an overflowing string with "...", keeping approximately equal
+    /// numbers of text elements from each end. Text-element boundaries follow the current runtime.
+    /// </summary>
+    public static string GetStringWithLimitedWidthTrimMiddle(string str, int fontIndex, int maxWidth)
+    {
+        if (fontIndex < 0 || fontIndex >= fonts.Count)
+            throw new IndexOutOfRangeException($"Invalid font index. {fonts.Count} fonts loaded, requested index: {fontIndex}");
+
+        if (str == null)
+            throw new ArgumentNullException(nameof(str));
+
+        var font = fonts[fontIndex];
+        if (str.Length == 0 || font.MeasureString(str).X <= maxWidth)
+            return str;
+
+        const string ellipsis = "...";
+        if (maxWidth < 0 || font.MeasureString(ellipsis).X > maxWidth)
+            return string.Empty;
+
+        int[] elements = StringInfo.ParseCombiningCharacters(str);
+        int low = 0;
+        int high = elements.Length - 1;
+        string result = ellipsis;
+
+        while (low < high)
+        {
+            int count = low + (high - low + 1) / 2;
+            int prefixLength = elements[(count + 1) / 2];
+            int suffixStart = count / 2 == 0 ? str.Length : elements[elements.Length - count / 2];
+            string candidate = str.Substring(0, prefixLength) + ellipsis + str.Substring(suffixStart);
+
+            // Measure the complete candidate: joining the ends can change shaping or kerning.
+            // Non-monotonic font metrics may retain fewer elements, but never an unchecked width.
+            if (font.MeasureString(candidate).X <= maxWidth)
+            {
+                result = candidate;
+                low = count;
+            }
+            else
+            {
+                high = count - 1;
+            }
+        }
+
+        return result;
+    }
+
     public static TextParseReturnValue FixText(string text, int fontIndex, int width)
     {
         if (fontIndex < 0 || fontIndex >= fonts.Count)

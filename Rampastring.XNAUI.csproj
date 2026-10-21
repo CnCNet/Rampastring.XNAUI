@@ -1,7 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup>
-    <Compile Remove="Tests/**/*.cs" />
-  </ItemGroup>
   <PropertyGroup>
     <TargetDotnet>net8.0</TargetDotnet>
     <TargetDotnetFramework>net48</TargetDotnetFramework>

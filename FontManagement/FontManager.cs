@@ -558,7 +558,8 @@ public static class FontManager
             int count = low + (high - low + 1) / 2;
             int prefixLength = elements[(count + 1) / 2];
             int suffixStart = count / 2 == 0 ? str.Length : elements[elements.Length - count / 2];
-            string candidate = str.Substring(0, prefixLength) + ellipsis + str.Substring(suffixStart);
+            string candidate = str.SubstringSurrogateAware(0, prefixLength) + ellipsis +
+                str.SubstringSurrogateAware(suffixStart, str.Length - suffixStart);
 
             // Measure the complete candidate: joining the ends can change shaping or kerning.
             // Non-monotonic font metrics may retain fewer elements, but never an unchecked width.

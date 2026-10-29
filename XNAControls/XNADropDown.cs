@@ -1,10 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Rampastring.Tools;
-using Rampastring.XNAUI.Extensions;
 using Rampastring.XNAUI.FontManagement;
 using System;
 using System.Collections.Generic;
+using Rampastring.XNAUI.Extensions;
 
 namespace Rampastring.XNAUI.XNAControls;
 
@@ -725,7 +725,7 @@ public class XNADropDown : XNAControl
             if (item.Text != null)
             {
                 string displayText = GetDisplayTextForSelectedItem(item, textX);
-                int textY = dropDownRect.Y + Renderer.GetTextYPadding(displayText, FontIndex, dropDownRect.Height);
+                int textY = dropDownRect.Y + Renderer.GetSingleLineTextYPadding(FontIndex, dropDownRect.Height);
                 DrawStringWithShadow(displayText, FontIndex,
                     new Vector2(textX, textY), GetItemTextColor(item));
             }
@@ -803,7 +803,7 @@ public class XNADropDown : XNAControl
         if (item.Text != null)
         {
             int textY = y + Renderer.GetTextYPadding(item.Text, FontIndex, ItemHeight);
-            DrawStringWithShadow(item.Text, FontIndex, new Vector2(textX, textY), textColor);
+            DrawStringWithShadow(item.Text, FontIndex, new Vector2(textX, y + 1), textColor);
         }
     }
 }

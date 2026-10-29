@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 #if WINFORMS
 using Rampastring.XNAUI.Input;
-using TextCopy;
 #endif
 using System;
 using System.Collections.Generic;
@@ -683,13 +682,7 @@ public class XNAListBox : XNAPanel
 
         if (e.PressedKey == Keys.C && Keyboard.IsCtrlHeldDown())
         {
-            try
-            {
-                ClipboardService.SetText(SelectedItem.Text);
-            }
-            catch (Exception)
-            {
-            }
+            Clipboard.SetText(SelectedItem.Text);
         }
     }
 #endif

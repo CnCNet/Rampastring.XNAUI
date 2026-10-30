@@ -23,7 +23,7 @@ public class XNATabControl : XNAControl
     private int _selectedTab = 0;
     public int SelectedTab
     {
-        get { return _selectedTab; }
+        get => _selectedTab;
         set
         {
             if (_selectedTab == value)
@@ -44,7 +44,7 @@ public class XNATabControl : XNAControl
     public Color TextColor
     {
         get => _textColor ?? UISettings.ActiveSettings.AltColor;
-        set { _textColor = value; }
+        set => _textColor = value;
     }
 
     private Color? _textColorDisabled;
@@ -52,7 +52,7 @@ public class XNATabControl : XNAControl
     public Color TextColorDisabled
     {
         get => _textColorDisabled ?? UISettings.ActiveSettings.DisabledItemColor;
-        set { _textColorDisabled = value; }
+        set => _textColorDisabled = value;
     }
 
     private List<Tab> Tabs = new List<Tab>();

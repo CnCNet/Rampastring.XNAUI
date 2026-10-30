@@ -79,4 +79,6 @@ public class UISettings
     public float CheckBoxAlphaRate = 0.05f;
 
     public float IndicatorAlphaRate = 0.05f;
+
+    public int BorderThickness { get; set; } = 1;
 }

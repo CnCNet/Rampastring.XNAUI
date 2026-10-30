@@ -47,7 +47,7 @@ public class XNACheckBox : XNAControl
     /// </summary>
     public bool Checked
     {
-        get { return _checked; }
+        get => _checked;
         set
         {
             bool originalValue = _checked;
@@ -81,7 +81,7 @@ public class XNACheckBox : XNAControl
     public Color IdleColor
     {
         get => _idleColor ?? UISettings.ActiveSettings.TextColor;
-        set { _idleColor = value; }
+        set => _idleColor = value;
     }
 
     private Color? _highlightColor;
@@ -103,10 +103,7 @@ public class XNACheckBox : XNAControl
     /// </summary>
     public override string Text
     {
-        get
-        {
-            return base.Text;
-        }
+        get => base.Text;
 
         set
         {

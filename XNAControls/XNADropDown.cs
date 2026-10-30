@@ -728,8 +728,7 @@ public class XNADropDown : XNAControl
             {
                 string displayText = GetDisplayTextForSelectedItem(item, textX);
                 int textY = dropDownRect.Y + Renderer.GetSingleLineTextYPadding(FontIndex, dropDownRect.Height);
-                DrawStringWithShadow(displayText, FontIndex,
-                    new Vector2(textX, textY), GetItemTextColor(item));
+                DrawStringWithShadow(displayText, FontIndex, new Vector2(textX, textY), GetItemTextColor(item));
             }
         }
 

@@ -273,7 +273,7 @@ public static class FontManager
                 break;
 
             string fontPath = section.GetStringValue("Path", "");
-            int size = section.GetIntValue("Size", 16);
+            float size = section.GetSingleValue("Size", 16f);
             string fontTypeStr = section.GetStringValue("Type", nameof(FontType.SpriteFont));
 
             if (!Enum.TryParse<FontType>(fontTypeStr, true, out var fontType))
@@ -309,7 +309,7 @@ public static class FontManager
     /// The FontSystem contains the Windows system font (if specified), the file-based primary
     /// font (if specified), and the shared fallback fonts, in that order.
     /// </summary>
-    private static void CreateTrueTypeFontIndex(int fontIndex, string primaryFontPath, int size, string searchPath,
+    private static void CreateTrueTypeFontIndex(int fontIndex, string primaryFontPath, float size, string searchPath,
         string systemFontFamily = null, string systemFontStyle = null)
     {
         FontSystem fontSystem = CreateFontSystem();

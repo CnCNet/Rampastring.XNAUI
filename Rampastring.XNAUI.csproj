@@ -94,6 +94,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="IsExternalInit" Version="1.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Rampastring.Tools" Version="3.0.3" Condition="!Exists('$(ToolsSubmoduleProjectPath)')" />
     <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.49-beta" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />

@@ -89,6 +89,17 @@ public static class Renderer
     public static string GetStringWithLimitedWidth(string str, int fontIndex, int maxWidth) =>
         FontManager.GetStringWithLimitedWidth(str, fontIndex, maxWidth);
 
+    /// <summary>
+    /// Limits a string's width by replacing its middle with "...", retaining text from both ends.
+    /// Text that already fits is unchanged. Returns an empty string if the ellipsis cannot fit.
+    /// </summary>
+    /// <param name="str">The string to limit.</param>
+    /// <param name="fontIndex">The index of the font to use.</param>
+    /// <param name="maxWidth">The maximum width of the string.</param>
+    /// <returns>The original or shortened string.</returns>
+    public static string GetStringWithLimitedWidthTrimMiddle(string str, int fontIndex, int maxWidth) =>
+        FontManager.GetStringWithLimitedWidthTrimMiddle(str, fontIndex, maxWidth);
+
     public static TextParseReturnValue FixText(string text, int fontIndex, int width) =>
         FontManager.FixText(text, fontIndex, width);
 

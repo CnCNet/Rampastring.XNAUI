@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rampastring.Tools;
@@ -81,6 +81,9 @@ public class XNADropDown : XNAControl
     /// </summary>
     public event EventHandler IndexReselected;
 
+    /// <summary>
+    /// The index of the top-most visible drop down item.
+    /// </summary>
     public int TopIndex { get; set; }
 
     /// <summary>The height of drop-down items in pixels.</summary>
@@ -151,6 +154,7 @@ public class XNADropDown : XNAControl
     public int FontIndex { get; set; }
 
     private Color? _borderColor;
+
     public Color BorderColor
     {
         get => _borderColor ?? UISettings.ActiveSettings.PanelBorderColor;
@@ -158,6 +162,7 @@ public class XNADropDown : XNAControl
     }
 
     private Color? _focusColor;
+
     public Color FocusColor
     {
         get => _focusColor ?? UISettings.ActiveSettings.FocusColor;
@@ -165,6 +170,7 @@ public class XNADropDown : XNAControl
     }
 
     private Color? _backColor;
+
     public Color BackColor
     {
         get => _backColor ?? UISettings.ActiveSettings.DropDownBackgroundColor;
@@ -183,6 +189,7 @@ public class XNADropDown : XNAControl
     }
 
     private Color? _textColor;
+
     public Color TextColor
     {
         get => _textColor ?? UISettings.ActiveSettings.AltColor;
@@ -190,12 +197,16 @@ public class XNADropDown : XNAControl
     }
 
     private Color? _disabledItemColor;
+
     public Color DisabledItemColor
     {
         get => _disabledItemColor ?? UISettings.ActiveSettings.DisabledItemColor;
         set => _disabledItemColor = value;
     }
 
+    /// <summary>
+    /// If set, the drop-down is opened upwards rather than downwards.
+    /// </summary>
     public bool OpenUp { get; set; }
 
     private bool _showEllipsisOnOverflow = false;
@@ -217,19 +228,31 @@ public class XNADropDown : XNAControl
 
     public Texture2D DropDownTexture { get; set; }
     public Texture2D DropDownOpenTexture { get; set; }
+
     public EnhancedSoundEffect ClickSoundEffect { get; set; }
 
     private bool clickedAfterOpen = false;
     private int numFittingItems = 0;
 
     /// <summary>
-    /// The width of the open dropdown list, computed as the maximum of the
-    /// control's width and the widest item's content width.
+    /// The width of the open dropdown list. Computed in <see cref="OpenDropDown"/> as the
+    /// maximum of <see cref="XNAControl.Width"/> and the widest item's content width, so
+    /// wide items remain fully visible when the list is expanded.
     /// </summary>
     private int expandedListWidth = 0;
 
+    /// <summary>
+    /// Stores the control width used when the dropdown is closed so it can be restored
+    /// after the expanded list has temporarily widened the control. Null when no closed
+    /// width has been captured yet, so a legitimate <see cref="XNAControl.Width"/> of 0
+    /// is preserved instead of being treated as "not captured".
+    /// </summary>
     private int? closedWidth = null;
 
+    /// <summary>
+    /// Ensures the framework-visible control width matches the actual visible dropdown
+    /// width while the list is open, and restores the original width when the list closes.
+    /// </summary>
     private void SyncWidthToDropDownState()
     {
         if (DropDownState != DropDownState.CLOSED)
@@ -250,6 +273,10 @@ public class XNADropDown : XNAControl
         }
     }
 
+    /// <summary>
+    /// Current visible width of the control, accounting for whether the dropdown list
+    /// is open and may be wider than the closed-state <see cref="XNAControl.Width"/>.
+    /// </summary>
     private int CurrentDisplayWidth
     {
         get
@@ -259,24 +286,47 @@ public class XNADropDown : XNAControl
         }
     }
 
+    // Cache for the truncated display text produced by GetDisplayTextForSelectedItem.
+    // That method is called every frame from DrawSelectedItem; without this cache it
+    // would re-run the MeasureString truncation on each draw.
     private (string cachedDisplayText, int cachedSelectedIndex, int cachedWidth, int cachedFontIndex, string cachedItemText) displayTextCache = (null, -1, 0, 0, null);
 
     #region AddItem methods
 
+    /// <summary>
+    /// Adds an item into the drop-down.
+    /// </summary>
+    /// <param name="item">The item.</param>
     public void AddItem(XNADropDownItem item) => Items.Add(item);
 
+    /// <summary>
+    /// Generates and adds an item with the specified text into the drop-down.
+    /// </summary>
+    /// <param name="text">The text of the item.</param>
     public void AddItem(string text)
     {
         var item = new XNADropDownItem { Text = text };
         Items.Add(item);
     }
 
+    /// <summary>
+    /// Generates and adds an item with the specified text and texture
+    /// into the drop-down.
+    /// </summary>
+    /// <param name="text">The text of the item.</param>
+    /// <param name="texture">The item's texture.</param>
     public void AddItem(string text, Texture2D texture)
     {
         var item = new XNADropDownItem { Text = text, Texture = texture };
         Items.Add(item);
     }
 
+    /// <summary>
+    /// Generates and adds an item with the specified text
+    /// and text color into the drop-down control.
+    /// </summary>
+    /// <param name="text">The text of the item.</param>
+    /// <param name="color">The color of the item's text.</param>
     public void AddItem(string text, Color color)
     {
         var item = new XNADropDownItem { Text = text, TextColor = color };
@@ -738,11 +788,19 @@ public class XNADropDown : XNAControl
         return -1;
     }
 
+    /// <summary>
+    /// Invalidates the cached display text.
+    /// </summary>
     private void InvalidateDisplayTextCache()
     {
         displayTextCache = (null, -1, 0, 0, null);
     }
 
+    /// <summary>
+    /// Gets the display text for the selected item, fitted to the control's bounds so
+    /// it does not visually overrun the control. Appends an ellipsis to indicate
+    /// truncation when <see cref="ShowEllipsisOnOverflow"/> is enabled.
+    /// </summary>
     private string GetDisplayTextForSelectedItem(XNADropDownItem item, int textX)
     {
         (string cachedDisplayText, int cachedSelectedIndex, int cachedWidth, int cachedFontIndex, string cachedItemText) = displayTextCache;
@@ -817,6 +875,9 @@ public class XNADropDown : XNAControl
         return displayText;
     }
 
+    /// <summary>
+    /// Draws the drop-down.
+    /// </summary>
     public override void Draw(GameTime gameTime)
     {
         Rectangle dropDownRect;
@@ -886,7 +947,10 @@ public class XNADropDown : XNAControl
 
     /// <summary>
     /// Draws a single drop-down item with selection and pulsing hover highlight.
+    /// This can be overridden in derived classes to customize the drawing code.
     /// </summary>
+    /// <param name="index">The index of the item to be drawn.</param>
+    /// <param name="y">The Y coordinate of the item's top border.</param>
     protected virtual void DrawItem(int index, int y)
     {
         if (_isScrollable)

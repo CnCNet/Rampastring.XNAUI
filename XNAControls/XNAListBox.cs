@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 #if WINFORMS
 using Rampastring.XNAUI.Input;
-using TextCopy;
 #endif
 using System;
 using System.Collections.Generic;
@@ -68,7 +67,7 @@ public class XNAListBox : XNAPanel
     public Color FocusColor
     {
         get => _focusColor ?? UISettings.ActiveSettings.FocusColor;
-        set { _focusColor = value; }
+        set => _focusColor = value;
     }
 
     private Color? _defaultItemColor;
@@ -76,7 +75,7 @@ public class XNAListBox : XNAPanel
     public Color DefaultItemColor
     {
         get => _defaultItemColor ?? UISettings.ActiveSettings.AltColor;
-        set { _defaultItemColor = value; }
+        set => _defaultItemColor = value;
     }
 
     private int _lineHeight;
@@ -202,7 +201,7 @@ public class XNAListBox : XNAPanel
     private int selectedIndex = -1;
     public int SelectedIndex
     {
-        get { return selectedIndex; }
+        get => selectedIndex;
         set
         {
             int oldSelectedIndex = selectedIndex;
@@ -231,10 +230,7 @@ public class XNAListBox : XNAPanel
     private int hoveredIndex = -1;
     public int HoveredIndex
     {
-        get
-        {
-            return hoveredIndex;
-        }
+        get => hoveredIndex;
         set
         {
             int oldHoveredIndex = hoveredIndex;
@@ -262,7 +258,7 @@ public class XNAListBox : XNAPanel
     /// </summary>
     public int NumberOfLinesOnList
     {
-        get { return (ClientRectangle.Height - 4) / LineHeight; }
+        get => (ClientRectangle.Height - 4) / LineHeight;
     }
 
     private bool _enableScrollbar = true;
@@ -272,7 +268,7 @@ public class XNAListBox : XNAPanel
     /// </summary>
     public bool EnableScrollbar
     {
-        get { return _enableScrollbar; }
+        get => _enableScrollbar;
         set
         {
             _enableScrollbar = value;
@@ -308,10 +304,10 @@ public class XNAListBox : XNAPanel
     {
         switch (key)
         {
-            case "EnableScrollbar":
+            case nameof(EnableScrollbar):
                 EnableScrollbar = Conversions.BooleanFromString(value, true);
                 return;
-            case "DrawSelectionUnderScrollbar":
+            case nameof(DrawSelectionUnderScrollbar):
                 DrawSelectionUnderScrollbar = Conversions.BooleanFromString(value, true);
                 return;
             case nameof(AllowMultiLineItems):
@@ -682,7 +678,9 @@ public class XNAListBox : XNAPanel
             return;
 
         if (e.PressedKey == Keys.C && Keyboard.IsCtrlHeldDown())
-            ClipboardService.SetText(SelectedItem.Text);
+        {
+            Clipboard.SetText(SelectedItem.Text);
+        }
     }
 #endif
 

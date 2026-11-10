@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using Rampastring.XNAUI.Extensions;
+﻿using Rampastring.XNAUI.Extensions;
 using Rampastring.XNAUI.FontManagement;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Rampastring.XNAUI;
 

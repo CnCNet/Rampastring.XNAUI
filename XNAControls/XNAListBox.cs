@@ -466,31 +466,22 @@ public class XNAListBox : XNAPanel
 
         if (textLines.Count > 1 && !AllowMultiLineItems)
         {
-            // Single-line mode: word wrapping splits on spaces, so keeping only the
-            // first wrapped line can discard most of a mixed CJK/Latin string
-            // (e.g. "回放: 跟随/自由选择单位" / "Replay: Follow/Free Unit Selection"
-            // would render as just "回放:"). Clip the whole string by character
-            // using GetStringWithLimitedWidth instead, so as much of it as
-            // possible stays visible.
+            // Word wrapping splits on spaces, so clip single-line items by character
+            // instead of dropping wrapped lines, borrowing the unused right padding.
+            // Replace the last character with an ellipsis if truncation is needed.
             string singleLine = (listBoxItem.Text ?? string.Empty)
                 .Replace("\r", string.Empty).Replace("\n", " ");
-            // Text starts at TextBorderDistance, so the unused right-hand padding
-            // is available as well: strings a few pixels wider than width still fit
-            // inside the column without overlapping the next one.
             int clipWidth = width + TextBorderDistance;
             string clipped = Renderer.GetStringWithLimitedWidth(singleLine, FontIndex, clipWidth);
 
             if (clipped.Length < singleLine.Length)
             {
-                // Replace rather than append: the truncation hint must never cost
-                // us another character of the original text.
                 const string ellipsis = "\u2026";
                 string candidate = clipped.Substring(0, Math.Max(0, clipped.Length - 1)) + ellipsis;
                 if (Renderer.GetTextDimensions(candidate, FontIndex).X <= clipWidth)
                     clipped = candidate;
             }
 
-            // TextLines references the same list instance; clearing it updates the item.
             textLines.Clear();
             textLines.Add(clipped);
         }

@@ -468,19 +468,10 @@ public class XNAListBox : XNAPanel
         {
             // Word wrapping splits on spaces, so clip single-line items by character
             // instead of dropping wrapped lines, borrowing the unused right padding.
-            // Replace the last character with an ellipsis if truncation is needed.
             string singleLine = (listBoxItem.Text ?? string.Empty)
                 .Replace("\r", string.Empty).Replace("\n", " ");
             int clipWidth = width + TextBorderDistance;
             string clipped = Renderer.GetStringWithLimitedWidth(singleLine, FontIndex, clipWidth);
-
-            if (clipped.Length < singleLine.Length)
-            {
-                const string ellipsis = "\u2026";
-                string candidate = clipped.Substring(0, Math.Max(0, clipped.Length - 1)) + ellipsis;
-                if (Renderer.GetTextDimensions(candidate, FontIndex).X <= clipWidth)
-                    clipped = candidate;
-            }
 
             textLines.Clear();
             textLines.Add(clipped);

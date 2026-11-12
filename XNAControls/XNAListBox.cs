@@ -466,8 +466,9 @@ public class XNAListBox : XNAPanel
         }
         else
         {
-            string text = Renderer.GetStringWithLimitedWidth(listBoxItem.Text, FontIndex, width);
-            textLines = [text];
+            string firstLine = listBoxItem.Text.Split(new[] { '\r', '\n' }, StringSplitOptions.None)[0];
+            string truncatedFirstLine = Renderer.GetStringWithLimitedWidth(firstLine, FontIndex, width);
+            textLines = [truncatedFirstLine];
         }
 
         listBoxItem.TextLines = textLines;

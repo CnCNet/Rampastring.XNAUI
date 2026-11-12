@@ -466,13 +466,13 @@ public class XNAListBox : XNAPanel
         }
         else
         {
-            string firstLine = (listBoxItem.Text ?? string.Empty).Split(new[] { '\r', '\n' }, StringSplitOptions.None)[0];
+            string firstLine = listBoxItem.Text?.Split(new[] { '\r', '\n' }, StringSplitOptions.None)?[0];
             string truncatedFirstLine = Renderer.GetStringWithLimitedWidth(firstLine, FontIndex, width);
             textLines = [truncatedFirstLine];
         }
 
         listBoxItem.TextLines = textLines;
-        
+
         if (textLines.Count == 0)
             textLines.Add(string.Empty);
 

@@ -466,8 +466,6 @@ public class XNAListBox : XNAPanel
 
         if (textLines.Count > 1 && !AllowMultiLineItems)
         {
-            // Word wrapping splits on spaces, so clip single-line items by character
-            // instead of dropping wrapped lines, borrowing the unused right padding.
             string singleLine = (listBoxItem.Text ?? string.Empty)
                 .Replace("\r", string.Empty).Replace("\n", " ");
             int clipWidth = width + TextBorderDistance;

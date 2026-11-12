@@ -19,25 +19,9 @@ public class TextParseReturnValue
 
     public static TextParseReturnValue FixText(IFont font, int width, string text)
     {
-        string line = string.Empty;
-        int lineCount = 0;
-        string processedText = string.Empty;
-        string[] wordArray = text.Split(' ');
-
-        foreach (string word in wordArray)
-        {
-            if (font.MeasureString(line + word).X > width)
-            {
-                processedText = processedText + line + Environment.NewLine;
-                lineCount++;
-                line = string.Empty;
-            }
-
-            line = line + word + " ";
-        }
-
-        processedText = processedText + line;
-        return new TextParseReturnValue(processedText, lineCount);
+        // Reuse the line splitter so explicit breaks, blank lines and long words are handled.
+        var lines = GetFixedTextLines(font, width, text, splitWords: true, keepBlankLines: true);
+        return new TextParseReturnValue(string.Join(Environment.NewLine, lines), Math.Max(0, lines.Count - 1));
     }
 
     public static List<string> GetFixedTextLines(IFont font, int width, string text, bool splitWords = true, bool keepBlankLines = false)

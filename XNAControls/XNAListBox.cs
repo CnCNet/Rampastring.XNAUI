@@ -471,10 +471,10 @@ public class XNAListBox : XNAPanel
             textLines = [truncatedFirstLine];
         }
 
-        listBoxItem.TextLines = textLines;
-
         if (textLines.Count == 0)
             textLines.Add(string.Empty);
+
+        listBoxItem.TextLines = textLines;
 
         if (textLines.Count == 1)
         {

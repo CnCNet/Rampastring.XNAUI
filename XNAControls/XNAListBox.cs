@@ -458,14 +458,23 @@ public class XNAListBox : XNAPanel
             width -= textureWidth + ITEM_TEXT_TEXTURE_MARGIN;
         }
 
-        // Apply word wrap if needed
-        List<string> textLines = Renderer.GetFixedTextLines(listBoxItem.Text, FontIndex, width);
+        List<string> textLines;
+        if (AllowMultiLineItems)
+        {
+            // Apply word wrap if needed
+            textLines = Renderer.GetFixedTextLines(listBoxItem.Text, FontIndex, width);
+        }
+        else
+        {
+            string firstLine = listBoxItem.Text?.Split(new[] { '\r', '\n' }, StringSplitOptions.None)?[0] ?? string.Empty;
+            string truncatedFirstLine = Renderer.GetStringWithLimitedWidth(firstLine, FontIndex, width);
+            textLines = [truncatedFirstLine];
+        }
+
         if (textLines.Count == 0)
             textLines.Add(string.Empty);
-        listBoxItem.TextLines = textLines;
 
-        if (textLines.Count > 1 && !AllowMultiLineItems)
-            textLines.RemoveRange(1, textLines.Count - 1);
+        listBoxItem.TextLines = textLines;
 
         if (textLines.Count == 1)
         {
